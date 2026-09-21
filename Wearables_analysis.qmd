@@ -4,36 +4,35 @@ format: html
 editor: visual
 ---
 
-# 1.	Resumen  de la tarea empresarial
+# 1. Resumen de la tarea empresarial
 
 Análisis de tendencias de uso de productos Fitbit con el fin de responder a las necesidades de los usuarios y dirigir campañas de marketing de la empresa competidora [Bellabeat](https://bellabeat.com/).
 
 Nos centramos en un sólo producto de Bellabeat:
 
--   *Leaf*: Dispositivo de seguimiento clásico de bienestar de Bellabeat que se puede usar como pulsera, collar o clip. El dispositivo Leaf se conecta a la aplicación Bellabeat para hacer un seguimiento de la actividad física, el sueño y el estrés.
+- *Leaf*: Dispositivo de seguimiento clásico de bienestar de Bellabeat que se puede usar como pulsera, collar o clip. El dispositivo Leaf se conecta a la aplicación Bellabeat para hacer un seguimiento de la actividad física, el sueño y el estrés.
 
 Este es el producto que mejor se adapta a la información que podemos obtener con los datos de Fitbit ya que tenemos los minutos dormidos y la actividad diaria. El estrés es difícil de operacionalizar con los datos que tenemos.
 
-
-# 2.	Descripción de todas las fuentes de datos utilizadas
+# 2. Descripción de todas las fuentes de datos utilizadas
 
 [Datos de seguimiento de actividad física de Fitbit](https://www.kaggle.com/datasets/arashnic/fitbit). Este conjunto de datos de Kaggle contiene el seguimiento de la actividad física personal en treinta usuarios de Fitbit. Treinta usuarios elegibles de Fitbit prestaron su consentimiento para el envío de datos personales de seguimiento que incluyen rendimiento de la actividad física en minutos, ritmo cardíaco y monitoreo del sueño. Incluye información sobre la actividad diaria, pasos y ritmo cardíaco que se puede usar para explorar los hábitos de los usuarios. Esta información fue recogida a través de una encuesta en la plataforma Amazon Mechanical Turk entre el 12 de marzo de 2016 y 12 de mayo del mismo año. Es decir, 2 meses.
+
+Recordar explicar que algunas definiciones de variables y valores sólo están  [aquí](https://dev.fitbit.com/build/reference/web-api) 
 
 Recordar explicar lo de que no tenemos demographic data
 
 Hay problemas con el sesgo o la credibilidad de estos datos?
 
-●	¿Cómo estás abordando la autorización, la privacidad, la seguridad y la accesibilidad?
+● ¿Cómo estás abordando la autorización, la privacidad, la seguridad y la accesibilidad?
 
 **Diccionario de variables**
 
 LogId: ID of the sleep log to be deleted.
 
+# 3. Documentación de todas las limpiezas y manipulaciones de datos
 
-# 3.	Documentación de todas las limpiezas y manipulaciones de datos
-
-●	¿Cómo verificaste la integridad de los datos?
-●	¿Existe algún problema con los datos?
+● ¿Cómo verificaste la integridad de los datos? ● ¿Existe algún problema con los datos?
 
 ## 3.1. Libraries
 
@@ -41,9 +40,13 @@ LogId: ID of the sleep log to be deleted.
 library(tidyverse)
 library(DataExplorer)
 library(lubridate)
+
+options(scipen = 999)#to not show scientific notation
 ```
 
 ## 3.2. Data
+
+Recordar explicar en el readme que saqué una carpeta hacia arriba los datos porque era redundante y que renombre a data la carpeta principal. Y que la carpeta principal está en gitignore.
 
 ```{r data}
 dailyActivity_merged1<-read_csv(file = "./data/Fitabase Data 3.12.16-4.11.16/dailyActivity_merged.csv")
@@ -61,27 +64,26 @@ head(minuteSleep_merged1)
 head(minuteSleep_merged2)
 ```
 
-
 ## 3.3. Cleaning
 
--   Joining dataset from different dates
--   Selecting variables
--   Converting dataset into long format (Explain more what that means later)
--   Changing variables format 
--   Giving variables descriptive names
--   Giving values descriptive and easy to read names
-
+- Joining dataset from different dates
+- Selecting variables
+- Converting dataset into long format (Explain more what that means later)
+- Changing variables format
+- Giving variables descriptive names
+- Giving values descriptive and easy to read names
 
 ```{r joinActivity}
 dailyActivity<- dailyActivity_merged1 |> full_join(dailyActivity_merged2) |> 
-  select(Id, Date=ActivityDate, ends_with("ActiveMinutes")) |> 
+  select(Id, Date=ActivityDate, ends_with("Minutes")) |> 
   pivot_longer(
-    cols = ends_with("ActiveMinutes"),
+    cols = ends_with("Minutes"),
     names_to = "Activity_intensity",
     values_to = "Minutes"
   ) |> 
   mutate(
-    Activity_intensity = str_remove(Activity_intensity, "ActiveMinutes"),
+    Activity_intensity = str_remove(Activity_intensity, "Minutes"),
+    Activity_intensity = str_remove(Activity_intensity, "Active"),
     Date= mdy(Date)
          )
 
@@ -91,22 +93,25 @@ dailyActivity
 ```{r joinSleep}
 minuteSleep<- 
   minuteSleep_merged1 |> full_join(minuteSleep_merged2) |> 
-  select(Id, Date=date,Sleep_state=value) |> 
+  select(Id, Date=date,Sleep_state=value, LogId=logId) |> 
   mutate(
-      Date_time = mdy_hms(Date), # Handles "4/12/2016 2:47:30 AM"
-      Date = as.Date(Date_time),      # Drops the time, keeps YYYY-MM-DD
+    # I don't want one user to seem twice the other. These are quali
+    Id = as.character(Id),
+    LogId = as.character(LogId),
+    
+    Date_time = mdy_hms(Date), # Handles "4/12/2016 2:47:30 AM"
+    Date = as.Date(Date_time),      # Drops the time, keeps YYYY-MM-DD
       
-    # 2. Change 1, 2, 3 into readable categories
-      Sleep_state = case_when(
-        Sleep_state == 1 ~ "Asleep",
-        Sleep_state == 2 ~ "Restless",
-        Sleep_state == 3 ~ "Awake"
+    # Change 1, 2, 3 into readable categories
+    Sleep_state = case_when(
+      Sleep_state == 1 ~ "Asleep",
+      Sleep_state == 2 ~ "Restless",
+      Sleep_state == 3 ~ "Awake"
         )
     ) 
 
 minuteSleep
 ```
-
 
 ```{r sleepWide}
 sleepWide<-
@@ -131,10 +136,16 @@ sleepWide
 
 ```
 
-# 4.	Resumen de tu análisis
+# 4. Resumen de tu análisis
 
 
-# 5.	Visualizaciones de respaldo y hallazgos clave
+# 5. Visualizaciones de respaldo y hallazgos clave
 
-# 6.	Las tres recomendaciones de contenido de alto nivel basadas en tu análisis
+# 6. Las tres recomendaciones de contenido de alto nivel basadas en tu análisis
 
+# Dudas / apuntes
+
+- Puede que tenga que utilizar logId
+- cuando la gente se va a dormir, se despierta y si se echa la siesta parece interesante
+
+Qué pregunta intentas responder y para quién. Cómo has limpiado y comprobado los datos. Qué conclusiones respaldan los resultados y qué limitaciones tienen. Qué recomendarías hacer y qué información adicional necesitaría
