@@ -132,14 +132,359 @@ sleepWide
 #  CREO QUE ESTO NO AYUDA
 # iba a hacer algo con lo de que hay más usuarios en activity q sleep pero da igual
 # Users<-
-  dailyActivity |> full_join(minuteSleep)
+  # dailyActivity |> full_join(minuteSleep)
 
 ```
 
 # 4. Resumen de tu análisis
 
+## Análisis exploratorio
+
+### Actividad
+
+```{r usersActivity}
+dailyActivity |> distinct(Id) |> count(name="n_users")
+```
+
+```{r histActivity}
+dailyActivity |> pull(Minutes) |> hist()
+```
+
+```{r}
+dailyActivity |>group_by(Activity_intensity) |> summarise(sum(Minutes))
+```
+
+```{r}
+summary_activity<-dailyActivity |>group_by(Activity_intensity) |> summarise(Minutes=sum(Minutes)) 
+
+ggplot(summary_activity, aes(x=Activity_intensity, y=Minutes)) + 
+  geom_bar(stat = "identity")
+```
+
+
+```{r}
+dailyActivity |>group_by(Id,Activity_intensity) |> summarise(sum(Minutes))
+```
+
+```{r}
+dailyActivity |>group_by(Id) |> summarise(sum(Minutes))
+```
+
+### Sueño
+
+```{r usersSleep}
+minuteSleep |> distinct(Id) |> count(name="n_users")
+```
+
+Menos que los 35 usuarios de activity
+
+```{r stateDistribution}
+minuteSleep |> count(Sleep_state)
+```
+
+```{r userSleep}
+minuteSleep |> filter(Id==1503960366, Date=="2016-03-17") |> select(-Date)
+```
+
+```{r sleelSchedule}
+sleep_schedule <-
+  minuteSleep |> 
+  # Group by the specific sleep session (logId) and the user
+  group_by(Id, LogId) |> 
+  
+  # Find the first time (min) and last time (max) of that session
+  summarize(
+    bedtime = min(Date_time),
+    wake_time = max(Date_time),
+    .groups = "drop"
+  ) |> 
+  mutate(
+    # Calculate total sleep time in hours
+    duration_hours = as.numeric(difftime(wake_time, bedtime, units = "hours")),
+    
+    # Extract the day of the week the sleep session started
+    # label = TRUE gives us names (Monday, Tuesday) instead of numbers
+    day_of_week = wday(bedtime, label = TRUE, abbr = FALSE) 
+  )|> 
+  relocate(duration_hours, .before = bedtime)
+
+sleep_schedule
+```
+
+
+```{r sleepTimes}
+# See the most common bedtimes (in 24-hour format)
+sleep_schedule |>   
+  # Extract just the hour to make it easy to find trends
+  mutate(
+    bed_hour = hour(bedtime),
+    wake_hour = hour(wake_time)
+  ) |> 
+  count(bed_hour, sort = TRUE)
+
+# See the most common wake times
+sleep_schedule |>   
+  # Extract just the hour to make it easy to find trends
+  mutate(
+    bed_hour = hour(bedtime),
+    wake_hour = hour(wake_time)
+  ) |> 
+  count(wake_hour, sort = TRUE)
+
+# See the most common durations of sleep
+sleep_schedule |> 
+  count(hours_of_sleep=round(duration_hours,0), sort = TRUE)
+
+# durations of sleep summary
+summary(sleep_schedule$duration_hours)
+```
+
+```{r bxpltDuration}
+ggplot(sleep_schedule, aes(x = "All Users", y = duration_hours)) +
+  # outlier.shape = NA evita que los outliers se dibujen por duplicado
+  geom_boxplot(fill = "#3498db", alpha = 0.7, color = "black", outlier.shape = NA) +
+  
+  # Añadimos los puntos con jitter. 
+  # width = 0.2 controla cuánto se dispersan horizontalmente
+  # alpha = 0.4 hace los puntos semitransparentes para ver dónde se acumulan
+  geom_jitter(width = 0.2, alpha = 0.4, color = "darkblue") +
+  
+  # 8-hour benchmark for sleep
+  geom_hline(yintercept = 8, linetype = "dashed", color = "#e74c3c", linewidth = 1) +
+  
+  labs(
+    title = "Overall Distribution of Sleep Duration",
+    subtitle = "Combined data for all users across all days",
+    x = NULL, # Removes the x-axis title since "All Users" is self-explanatory
+    y = "Hours of sleep"
+  ) +
+  theme_minimal()
+
+```
+
+Seems low but I am adding into the boxplot the naps and those should not last 8 hours. Also, how much can I trust the values if there are people sleeping 10 hour and more.
+
+
+```{r hstDuration}
+ggplot(sleep_schedule, aes(x = duration_hours)) +
+
+  # binwidth = 0.5 is crucial; it sets each bar to represent a 30-minute window.
+  geom_histogram(
+    binwidth = 0.5,
+    fill = "#3498db",  
+    color = "black",
+    alpha = 0.8 
+  ) +
+  
+  # Reference line (8-hour benchmark)
+  geom_vline(
+    xintercept = 8,
+    linetype = "dashed",
+    color = "#e74c3c", 
+    linewidth = 1
+  ) +
+  
+  # 4. Enhance readability and formatting
+  scale_x_continuous(
+    breaks = seq(0, max(sleep_duration$duration_hours, na.rm = TRUE) + 1, by = 1)
+    ) +
+  labs(
+    title = "Sleep Duration Distribution",
+    subtitle = "Histogram showing how often specific sleep lengths occur (in 30-minute bins)",
+    x = "Total Sleep Duration (Hours)",
+    y = "Frequency of sleep duration"
+  ) +
+  theme_minimal() +
+  # Make the title and axes text clear for presentation
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 10, face = "italic"),
+    axis.title = element_text(size = 11)
+  )
+```
+Most people are sleeping around 8 hours a night more or less. There is a big drop off in duration before six and a half and after 9. Perhaps if naps weren't included this histogram would look more like a normal distribution. Despite this, there still must be some error unaccounted for because I don't belive people are sleeping 16 hours straight.
+
+```{r}
+sleep_schedule |> 
+  arrange(duration_hours)
+```
+
+I don't see a clear pattern by having a quick look.
+
+
+```{r}
+nap<-sleep_schedule |> filter(duration_hours<= 2)
+
+# Using the sleep_schedule dataframe from the previous step
+nap |> 
+  ggplot(aes(x = bed_hour)) +
+  # Set a single static color since we aren't comparing two events anymore
+  geom_bar(fill = "#2c3e50", color = "black", alpha = 0.8) +
+  # Force the x-axis to show every hour from 0 to 23
+  scale_x_continuous(breaks = seq(0, 23, by = 1)) +
+  labs(
+    title = "Most Common Bedtimes",
+    subtitle = "Based on minute-level sleep data (24-hour clock)",
+    x = "Hour of Day (0 = Midnight, 12 = Noon)",
+    y = "Total Number of Sleep Sessions"
+  ) +
+  theme_minimal()
+```
+
+I was hoping to see that the low durations of sleep corresponded times of day associated with nap time. It seems unlikely then that people are taking 2 hour naps in the middle of the night. It's more likely that the LogId that should be measuring the full sleep attempt is failing and loging more than one sleep attempt per night of sleep thus artificially lowering the durations of the main sleep of the day.
+
+
+```{r}
+sleep_schedule |> 
+  # If you don't have a specific 'date' column, extract it from bedtime
+  mutate(sleep_date = as.Date(bedtime)) |> 
+  count(Id, sleep_date, name = "total_sessions") |> 
+  # Sort to see the users with the most sessions per day at the top
+  arrange(desc(total_sessions))
+```
+
+There aren't an inmense amount of breaks. 170 rows aprox out of 790 have more than one sleep_date. Maybe those can be the naps.
+
+```{r}
+sleep_schedule |> 
+  filter(
+    Id == 6117666160, 
+    as.Date(bedtime) == "2016-03-16"
+  ) |> 
+  relocate(duration_hours, .before = bedtime) |> 
+  relocate(Id, .after = day_of_week) 
+```
+
+Is this an error or does this guy have a terrible sleep schedule? In any case this tells me that having 2 LogIds in the same day doesn't necessaraly mean measurement error, nap or bad sleeping habits. They could also go to sleep after 0:00 in Tuesday (therefore is technically Wednesday) and before 0:00 the next day (also Wednesday).
+
+
+```{r}
+nap <- 
+  sleep_schedule |> 
+  filter(
+    duration_hours <= 2, 
+    between(hour(bedtime), 13, 15)
+  )
+
+not_nap <- sleep_schedule |> anti_join(nap)
+  
+```
+
+
+```{r}
+ggplot(not_nap, aes(x = duration_hours)) +
+
+  # binwidth = 0.5 is crucial; it sets each bar to represent a 30-minute window.
+  geom_histogram(
+    binwidth = 0.5,
+    fill = "#3498db",  
+    color = "black",
+    alpha = 0.8 
+  ) +
+  
+  # Reference line (8-hour benchmark)
+  geom_vline(
+    xintercept = 8,
+    linetype = "dashed",
+    color = "#e74c3c", 
+    linewidth = 1
+  ) +
+  
+  # 4. Enhance readability and formatting
+  scale_x_continuous(
+    breaks = seq(0, max(sleep_duration$duration_hours, na.rm = TRUE) + 1, by = 1)
+    ) +
+  labs(
+    title = "Sleep Duration Distribution",
+    subtitle = "Histogram showing how often specific sleep lengths occur (in 30-minute bins)",
+    x = "Total Sleep Duration (Hours)",
+    y = "Frequency of sleep duration"
+  ) +
+  theme_minimal() +
+  # Make the title and axes text clear for presentation
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 10, face = "italic"),
+    axis.title = element_text(size = 11)
+  )
+```
+
+Wasted my time on the nap thing. Very little impact on the distribution.
+
+```{r timeHitSack}
+sleep_schedule |>   
+  # filter extreme cases simply using logic (NOT USING STATISTICS MAYBE CHANGE)
+  filter(duration_hours<10) |> 
+  
+  # Extract just the hour to make it easy to find trends
+  mutate(
+    bed_hour = hour(bedtime),
+    wake_hour = hour(wake_time)) |> 
+
+  # Pivot the data to put both bed_hour and wake_hour into a single column
+  pivot_longer(
+    cols = c(bed_hour, wake_hour),
+    names_to = "event_type",
+    values_to = "hour"
+  ) |> 
+  
+  # Rename the variables so the chart legend looks professional
+  mutate(
+    event_type = case_when(
+      event_type == "bed_hour" ~ "Bedtime",
+      event_type == "wake_hour" ~ "Wake Time"
+    )
+  ) |> 
+
+  ggplot(aes(x = hour, fill = event_type)) +
+  geom_bar(position = "dodge", color = "black", alpha = 0.8) +
+  
+  # Force the x-axis to show every hour from 0 to 23
+  scale_x_continuous(breaks = seq(0, 23, by = 1)) +
+  
+  # Add custom Bellabeat brand colors
+  scale_fill_manual(values = c("Bedtime" = "#2c3e50", "Wake Time" = "#e74c3c")) +
+  
+  labs(
+    title = "Most Common Bedtimes and Wake Times",
+    subtitle = "Each bar is the sum of all instances of an hour in the data. \n
+    6:59 and 6:01 both count in the column of waking up at 6",
+    x = "Hour of Day (0 = Midnight, 12 = Noon)",
+    y = "Total Number of Sleep Sessions",
+    fill = "Event"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+This proves that naps are not common, yet late bedtimes are.
+
+```{r bxpltDurationWkDay}
+# Build the boxplot
+ggplot(sleep_schedule, aes(x = day_of_week, y = duration_hours, fill = day_of_week)) +
+  geom_boxplot(alpha = 0.7, color = "black") +
+  
+  # Add a visual benchmark for the recommended 8 hours
+  geom_hline(yintercept = 8, linetype = "dashed", color = "#e74c3c", linewidth = 1) +
+  
+  labs(
+    title = "Distribution of Sleep Duration by Day of the Week",
+    subtitle = "Red dashed line represents the recommended 8 hours of sleep",
+    x = "Day of the Week",
+    y = "Total Sleep Duration (Hours)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none") # Hides the legend since the x-axis already labels days
+```
+
+Doesn't really tell me much. Sure Sábado has a wider distribution with people willing to sleep less but not that much more than a random miércoles.
 
 # 5. Visualizaciones de respaldo y hallazgos clave
+
+## Sueño visualisations
+
+
+
+
 
 # 6. Las tres recomendaciones de contenido de alto nivel basadas en tu análisis
 
