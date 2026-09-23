@@ -130,7 +130,8 @@ head(minuteSleep_merged2)
 - Checking for NAs
 
 ```{r joinActivity}
-dailyActivity<- dailyActivity_merged1 |> full_join(dailyActivity_merged2) |> 
+dailyActivity<- 
+  dailyActivity_merged1 |> full_join(dailyActivity_merged2) |> 
   select(Id, Date=ActivityDate, ends_with("Minutes")) |> 
   pivot_longer(
     cols = ends_with("Minutes"),
@@ -139,9 +140,11 @@ dailyActivity<- dailyActivity_merged1 |> full_join(dailyActivity_merged2) |>
   ) |> 
   mutate(
     Id = as.character(Id),
+    Date= mdy(Date),
     Activity_intensity = str_remove(Activity_intensity, "Minutes"),
     Activity_intensity = str_remove(Activity_intensity, "Active"),
-    Date= mdy(Date)
+    Activity_intensity = factor(Activity_intensity, 
+                                levels = c("Sedentary", "Lightly", "Fairly", "Very"))
          )
 
 head(dailyActivity)
@@ -159,12 +162,13 @@ minuteSleep<-
     Date_time = mdy_hms(Date), # Handles "4/12/2016 2:47:30 AM"
     Date = as.Date(Date_time),      # Drops the time, keeps YYYY-MM-DD
       
-    # Change 1, 2, 3 into readable categories
-    Sleep_state = case_when(
-      Sleep_state == 1 ~ "Asleep",
-      Sleep_state == 2 ~ "Restless",
-      Sleep_state == 3 ~ "Awake"
-        )
+    # Change 1, 2, 3 into readable ordinal categories
+    Sleep_state = factor(
+      Sleep_state,
+      levels = c(1, 2, 3),                       # Valores originales en los datos
+      labels = c("Asleep", "Restless", "Awake"), # Nuevas etiquetas de texto
+      ordered = TRUE                             # Jerarquía: Asleep < Restless < Awake
+      )
     ) 
 
 head(minuteSleep)
