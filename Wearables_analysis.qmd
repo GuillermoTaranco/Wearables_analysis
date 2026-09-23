@@ -12,27 +12,82 @@ Nos centramos en un sólo producto de Bellabeat:
 
 - *Leaf*: Dispositivo de seguimiento clásico de bienestar de Bellabeat que se puede usar como pulsera, collar o clip. El dispositivo Leaf se conecta a la aplicación Bellabeat para hacer un seguimiento de la actividad física, el sueño y el estrés.
 
-Este es el producto que mejor se adapta a la información que podemos obtener con los datos de Fitbit ya que tenemos los minutos dormidos y la actividad diaria. El estrés es difícil de operacionalizar con los datos que tenemos.
+Este es el producto que mejor se adapta a la información que podemos obtener con los datos de Fitbit ya que tenemos los minutos dormidos y la actividad diaria. El estrés no lo incluimos en el estudio ya que es difícil de operacionalizar con los datos que tenemos.
+
 
 # 2. Descripción de todas las fuentes de datos utilizadas
 
-[Datos de seguimiento de actividad física de Fitbit](https://www.kaggle.com/datasets/arashnic/fitbit). Este conjunto de datos de Kaggle contiene el seguimiento de la actividad física personal en treinta usuarios de Fitbit. Treinta usuarios elegibles de Fitbit prestaron su consentimiento para el envío de datos personales de seguimiento que incluyen rendimiento de la actividad física en minutos, ritmo cardíaco y monitoreo del sueño. Incluye información sobre la actividad diaria, pasos y ritmo cardíaco que se puede usar para explorar los hábitos de los usuarios. Esta información fue recogida a través de una encuesta en la plataforma Amazon Mechanical Turk entre el 12 de marzo de 2016 y 12 de mayo del mismo año. Es decir, 2 meses.
+[Datos de seguimiento de actividad física de Fitbit](https://www.kaggle.com/datasets/arashnic/fitbit). Este conjunto de datos de Kaggle contiene el seguimiento de la actividad física personal de alrededor de treinta usuarios de Fitbit. Entre los datos personales de seguimiento se incluyen:
 
-Recordar explicar que algunas definiciones de variables y valores sólo están  [aquí](https://dev.fitbit.com/build/reference/web-api) 
+-   Rendimiento de la actividad física en minutos
+-   Ritmo cardíaco
+-   Monitoreo del sueño
+-   Actividad diaria
+-   Pasos
 
-Recordar explicar lo de que no tenemos demographic data
+Los participantes fueron reclutados a través de una encuesta en la plataforma Amazon Mechanical Turk entre el 12 de marzo de 2016 y 12 de mayo del mismo año. Es decir, 2 meses.
 
-Hay problemas con el sesgo o la credibilidad de estos datos?
+Además de la información contenida en la página de Github también ha sido necesario consultar la [documentación de web-API de Fitbit](https://dev.fitbit.com/build/reference/web-api) para entender lo que representan ciertas variables y ciertos valores.
 
-● ¿Cómo estás abordando la autorización, la privacidad, la seguridad y la accesibilidad?
+## 2.1. Sesgos, credibilidad y alcance de los datos
 
-**Diccionario de variables**
+Hay varios aspectos que sesgan y limítan el alcance y credibilidad de este estudio:
 
-LogId: ID of the sleep log to be deleted.
+-   La *población objetivo* de la marca Bellabeat son sólo mujeres. Por lo tanto difiere de la población de usuarios de Fitbit. Esto podría alterar los patrones de uso esperados de maneras que no podemos preveer sin consultar más información. (Error de cobertura)
+
+-   El *marco muestral* no es representativo. Al reclutar participantes a través de Amazon Mechanical Turk la muestra está compuesta por personas distintas de la población general. No es un muestreo probabilístico aleatorio de entre todos los usuarios.Es un muestreo de conveniencia donde los participantes se autoseleccionan para participar a cambio de una pequeña remuneración económica. (Error muestral)
+
+-   *Falta información* de sueño. Esta falta de monitorización nocturna por parte de un grupo de usuarios introduce un sesgo, ya que los perfiles o comportamientos de quienes no registran su sueño (por incomodidad, falta de batería o desinterés) podrían diferir sistemáticamente de los que sí lo hacen, sesgando cualquier análisis general sobre el descanso.(Error por falta de respuesta)
+
+-   El *tamaño muestral* es pequeño.  Aproximadamente 30 usuarios de una población de usuarios activos de Fitbit de millones. Sin embargo, como punto de partida, son suficientes para que empiece a aplicarse el Teorema del límite central y podamos aprender patrones generales. El alcance del case study 2 por lo tanto está un poco exagerado. No podemos realmente basar grandes decisiones de negocio en este estudio.
+
+-   El *límite temporal* del estudio es corto. Las tendencias emergen a lo largo del tiempo. En un periodo de 2 meses no podemos identificar variaciones estacionales
+
+-   La *fuente de datos* es de tercera mano. Si Fitbit nos enviara los datos, estos serían más precisos, confiables, pertinentes, y tendríamos más transparencia en el tratamiento de los datos. Podemos confiar en la fuente debido a que tanto el autor como el dataset están bien puntuados en Kaggle. Sabemos quien es el autor y sabemos que los datos están bajo dominio público (CC0: Dominio Público (Public Domain)). Esto otorga permiso legal y total para acceder, copiar, modificar, distribuir y utilizar los datos para este análisis sin infringir derechos de autor ni requerir permiso expreso adicional.
+
+-   Los datos están *desactualizados*. La tecnología de los dispositivos y el contexto global han cambiado significativamente desde entonces.
+
+
+## 2.2. Diccionario de Datos
+### 2.2.1. Diccionario `DATASET1`
+
+Esta tabla contiene un resumen diario de la actividad física, intensidad y calorías quemadas por cada usuario.
+
+***VOY A CAMBIAR ESTO PARA INCLUIR SÓLO LAS VARIABLES QUE YO UTILIZO Y CREO*** 
+
+| Nombre de la Columna | Tipo de Dato | Descripción |
+| :--- | :--- | :--- |
+| **Id** | Numérico | Identificador único asignado a cada usuario de Fitbit. |
+| **ActivityDate** | Fecha | Fecha en la que se registraron los datos de actividad (formato MM/DD/YYYY). |
+| **TotalSteps** | Numérico | Número total de pasos registrados durante ese día. |
+| **TotalDistance** | Numérico | Distancia total recorrida en el día (estimada en kilómetros). |
+| **TrackerDistance** | Numérico | Distancia registrada de forma automática por el dispositivo Fitbit. |
+| **LoggedActivitiesDistance** | Numérico | Distancia proveniente de actividades registradas manualmente por el usuario. |
+| **VeryActiveDistance** | Numérico | Distancia recorrida durante periodos de actividad física muy intensa. |
+| **ModeratelyActiveDistance**| Numérico | Distancia recorrida durante periodos de actividad física moderada. |
+| **LightActiveDistance** | Numérico | Distancia recorrida durante periodos de actividad física ligera. |
+| **SedentaryActiveDistance** | Numérico | Distancia registrada mientras el usuario estaba en estado sedentario. |
+| **VeryActiveMinutes** | Numérico | Minutos totales del día en los que el usuario tuvo actividad muy intensa. |
+| **FairlyActiveMinutes** | Numérico | Minutos totales del día en los que el usuario tuvo actividad moderada. |
+| **LightlyActiveMinutes** | Numérico | Minutos totales del día en los que el usuario tuvo actividad ligera. |
+| **SedentaryMinutes** | Numérico | Minutos totales del día en los que el usuario estuvo sedentario o inactivo. |
+| **Calories** | Numérico | Estimación del total de calorías quemadas a lo largo del día. |
+
+---
+
+### 2.2.2. Diccionario  `DATASET2`
+
+Esta tabla contiene registros a nivel de minuto sobre el estado de sueño de los usuarios. 
+
+| Nombre de la Columna | Tipo de Dato | Descripción |
+| :--- | :--- | :--- |
+| **Id** | Numérico | Identificador único asignado a cada usuario de Fitbit. |
+| **date** | Fecha y Hora | Fecha y minuto exacto en el que se tomó la lectura del estado de sueño. |
+| **value** | Numérico | Estado del sueño en ese minuto específico. Valores comunes: **1** (Dormido), **2** (Inquieto/Restless), **3** (Despierto). |
+| **logId** | Numérico | Identificador único del evento o sesión de sueño global. |
+
 
 # 3. Documentación de todas las limpiezas y manipulaciones de datos
-
-● ¿Cómo verificaste la integridad de los datos? ● ¿Existe algún problema con los datos?
 
 ## 3.1. Libraries
 
@@ -46,7 +101,7 @@ options(scipen = 999)#to not show scientific notation
 
 ## 3.2. Data
 
-Recordar explicar en el readme que saqué una carpeta hacia arriba los datos porque era redundante y que renombre a data la carpeta principal. Y que la carpeta principal está en gitignore.
+**Recordar explicar en el readme que saqué una carpeta hacia arriba los datos porque era redundante y que renombre a data la carpeta principal. Y que la carpeta principal está en gitignore.**
 
 ```{r data}
 dailyActivity_merged1<-read_csv(file = "./data/Fitabase Data 3.12.16-4.11.16/dailyActivity_merged.csv")
@@ -72,6 +127,7 @@ head(minuteSleep_merged2)
 - Changing variables format
 - Giving variables descriptive names
 - Giving values descriptive and easy to read names
+- Checking for NAs
 
 ```{r joinActivity}
 dailyActivity<- dailyActivity_merged1 |> full_join(dailyActivity_merged2) |> 
@@ -82,12 +138,13 @@ dailyActivity<- dailyActivity_merged1 |> full_join(dailyActivity_merged2) |>
     values_to = "Minutes"
   ) |> 
   mutate(
+    Id = as.character(Id),
     Activity_intensity = str_remove(Activity_intensity, "Minutes"),
     Activity_intensity = str_remove(Activity_intensity, "Active"),
     Date= mdy(Date)
          )
 
-dailyActivity
+head(dailyActivity)
 ```
 
 ```{r joinSleep}
@@ -110,7 +167,7 @@ minuteSleep<-
         )
     ) 
 
-minuteSleep
+head(minuteSleep)
 ```
 
 ```{r sleepWide}
@@ -125,7 +182,7 @@ sleepWide<-
     values_fill = 0 # Puts a 0 if the user had 0 minutes in a state that day
   ) 
 
-sleepWide
+head(sleepWide)
 ```
 
 ```{r joinUsers}
@@ -134,6 +191,12 @@ sleepWide
 # Users<-
   # dailyActivity |> full_join(minuteSleep)
 
+```
+
+```{r checkNAs}
+plot_intro(dailyActivity)
+plot_intro(minuteSleep)
+plot_intro(sleepWide)
 ```
 
 # 4. Resumen de tu análisis
@@ -177,6 +240,22 @@ minuteSleep |> distinct(Id) |> count(name="n_users")
 ```
 
 Menos que los 35 usuarios de activity
+
+```{r}
+dailyActivity |> 
+  anti_join(minuteSleep, by = "Id") |> 
+  select(Id) |> 
+  distinct() |> 
+  count(name="n_users")
+
+minuteSleep |> 
+  anti_join(dailyActivity, by = "Id") |> 
+  select(Id) |> 
+  distinct() |> 
+  count(name="n_users")
+```
+
+Hay 10 usuarios que están en dailyActivity y no en minuteSleep. No hay ningún usuario de minuteSleep que no esté en dailyActivity.
 
 ```{r stateDistribution}
 minuteSleep |> count(Sleep_state)
@@ -409,7 +488,7 @@ ggplot(not_nap, aes(x = duration_hours)) +
   )
 ```
 
-Wasted my time on the nap thing. Very little impact on the distribution.
+Wasted my time on the nap thing. Very little impact on the distribution. I can still sell this as signs of terrible sleeping habits that bellabeat should try and help fix.
 
 ```{r timeHitSack}
 sleep_schedule |>   
@@ -478,9 +557,19 @@ ggplot(sleep_schedule, aes(x = day_of_week, y = duration_hours, fill = day_of_we
 
 Doesn't really tell me much. Sure Sábado has a wider distribution with people willing to sleep less but not that much more than a random miércoles.
 
+```{r}
+sleep_schedule |> 
+  mutate(sleep_date = as.Date(bedtime)) |> 
+  count(sleep_date, name = "total_logs_across_all_users") |> 
+  arrange(sleep_date)
+```
+
+WTF es esto por dios.
+
 # 5. Visualizaciones de respaldo y hallazgos clave
 
 ## Sueño visualisations
+
 
 
 
@@ -490,7 +579,15 @@ Doesn't really tell me much. Sure Sábado has a wider distribution with people w
 
 # Dudas / apuntes
 
-- Puede que tenga que utilizar logId
-- cuando la gente se va a dormir, se despierta y si se echa la siesta parece interesante
+-   time worn per day parece interesante
 
 Qué pregunta intentas responder y para quién. Cómo has limpiado y comprobado los datos. Qué conclusiones respaldan los resultados y qué limitaciones tienen. Qué recomendarías hacer y qué información adicional necesitaría
+
+### Autorización, Privacidad, Seguridad y Accesibilidad
+
+En el manejo de datos de salud y comportamiento de usuarios, es fundamental garantizar prácticas éticas y responsables. Para este caso de estudio, estos cuatro pilares se han abordado de la siguiente manera:
+
+*   **Autorización:** El conjunto de datos *Fitbit Fitness Tracker Data* fue publicado en la plataforma Kaggle bajo la licencia **CC0: Dominio Público (Public Domain)**. Esto otorga permiso legal y total para acceder, copiar, modificar, distribuir y utilizar los datos para este análisis sin infringir derechos de autor ni requerir permiso expreso adicional.
+*   **Privacidad:** Los datos están completamente **anonimizados**. El conjunto de datos no contiene Información de Identificación Personal (PII, por sus siglas en inglés) como nombres, direcciones, correos electrónicos o números de teléfono. Cada individuo está representado exclusivamente por un identificador numérico único de 10 dígitos (la columna `Id`), lo que garantiza que no se pueda rastrear la actividad hasta un usuario real.
+*   **Seguridad:** Para proteger la integridad de la información, los archivos originales (CSV) se descargaron y almacenaron en un entorno local y privado. Se aplicó el principio de preservación de datos en bruto (*raw data*): los archivos originales se guardaron en una carpeta separada y no se modificaron manualmente. Toda la limpieza, transformación y análisis se realizó mediante scripts (código en R o SQL), asegurando que el proceso sea auditable y que los datos originales permanezcan seguros e inalterables.
+*   **Accesibilidad:** Desde la perspectiva de los datos, la fuente es abierta y pública, lo que permite que cualquier otro analista pueda acceder a ellos en Kaggle para replicar o verificar este estudio. Además, en la presentación de este reporte, se ha procurado que la información sea accesible mediante el uso de tablas estructuradas y visualizaciones claras (considerando paletas de colores legibles) para facilitar la comprensión de los *insights* a cualquier tipo de audiencia o *stakeholder*.
