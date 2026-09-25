@@ -14,16 +14,15 @@ Nos centramos en un sólo producto de Bellabeat:
 
 Este es el producto que mejor se adapta a la información que podemos obtener con los datos de Fitbit ya que tenemos los minutos dormidos y la actividad diaria. El estrés no lo incluimos en el estudio ya que es difícil de operacionalizar con los datos que tenemos.
 
-
 # 2. Descripción de todas las fuentes de datos utilizadas
 
 [Datos de seguimiento de actividad física de Fitbit](https://www.kaggle.com/datasets/arashnic/fitbit). Este conjunto de datos de Kaggle contiene el seguimiento de la actividad física personal de alrededor de treinta usuarios de Fitbit. Entre los datos personales de seguimiento se incluyen:
 
--   Rendimiento de la actividad física en minutos
--   Ritmo cardíaco
--   Monitoreo del sueño
--   Actividad diaria
--   Pasos
+- Rendimiento de la actividad física en minutos
+- Ritmo cardíaco
+- Monitoreo del sueño
+- Actividad diaria
+- Pasos
 
 Los participantes fueron reclutados a través de una encuesta en la plataforma Amazon Mechanical Turk entre el 12 de marzo de 2016 y 12 de mayo del mismo año. Es decir, 2 meses.
 
@@ -33,30 +32,30 @@ Además de la información contenida en la página de Github también ha sido ne
 
 Hay varios aspectos que sesgan y limítan el alcance y credibilidad de este estudio:
 
--   La *población objetivo* de la marca Bellabeat son sólo mujeres. Por lo tanto difiere de la población de usuarios de Fitbit. Esto podría alterar los patrones de uso esperados de maneras que no podemos preveer sin consultar más información. (Error de cobertura)
+- La *población objetivo* de la marca Bellabeat son sólo mujeres. Por lo tanto difiere de la población de usuarios de Fitbit. Esto podría alterar los patrones de uso esperados de maneras que no podemos preveer sin consultar más información. (Error de cobertura)
 
--   El *marco muestral* no es representativo. Al reclutar participantes a través de Amazon Mechanical Turk la muestra está compuesta por personas distintas de la población general. No es un muestreo probabilístico aleatorio de entre todos los usuarios.Es un muestreo de conveniencia donde los participantes se autoseleccionan para participar a cambio de una pequeña remuneración económica. (Error muestral)
+- El *marco muestral* no es representativo. Al reclutar participantes a través de Amazon Mechanical Turk la muestra está compuesta por personas distintas de la población general. No es un muestreo probabilístico aleatorio de entre todos los usuarios.Es un muestreo de conveniencia donde los participantes se autoseleccionan para participar a cambio de una pequeña remuneración económica. (Error muestral)
 
--   *Falta información* de sueño. Esta falta de monitorización nocturna por parte de un grupo de usuarios introduce un sesgo, ya que los perfiles o comportamientos de quienes no registran su sueño (por incomodidad, falta de batería o desinterés) podrían diferir sistemáticamente de los que sí lo hacen, sesgando cualquier análisis general sobre el descanso.(Error por falta de respuesta)
+- *Falta información* de sueño. Esta falta de monitorización nocturna por parte de un grupo de usuarios introduce un sesgo, ya que los perfiles o comportamientos de quienes no registran su sueño (por incomodidad, falta de batería o desinterés) podrían diferir sistemáticamente de los que sí lo hacen, sesgando cualquier análisis general sobre el descanso.(Error por falta de respuesta)
 
--   El *tamaño muestral* es pequeño.  Aproximadamente 30 usuarios de una población de usuarios activos de Fitbit de millones. Sin embargo, como punto de partida, son suficientes para que empiece a aplicarse el Teorema del límite central y podamos aprender patrones generales. El alcance del case study 2 por lo tanto está un poco exagerado. No podemos realmente basar grandes decisiones de negocio en este estudio.
+- El *tamaño muestral* es pequeño. Aproximadamente 30 usuarios de una población de usuarios activos de Fitbit de millones. Sin embargo, como punto de partida, son suficientes para que empiece a aplicarse el Teorema del límite central y podamos aprender patrones generales. El alcance del case study 2 por lo tanto está un poco exagerado. No podemos realmente basar grandes decisiones de negocio en este estudio.
 
--   El *límite temporal* del estudio es corto. Las tendencias emergen a lo largo del tiempo. En un periodo de 2 meses no podemos identificar variaciones estacionales
+- El *límite temporal* del estudio es corto. Las tendencias emergen a lo largo del tiempo. En un periodo de 2 meses no podemos identificar variaciones estacionales
 
--   La *fuente de datos* es de tercera mano. Si Fitbit nos enviara los datos, estos serían más precisos, confiables, pertinentes, y tendríamos más transparencia en el tratamiento de los datos. Podemos confiar en la fuente debido a que tanto el autor como el dataset están bien puntuados en Kaggle. Sabemos quien es el autor y sabemos que los datos están bajo dominio público (CC0: Dominio Público (Public Domain)). Esto otorga permiso legal y total para acceder, copiar, modificar, distribuir y utilizar los datos para este análisis sin infringir derechos de autor ni requerir permiso expreso adicional.
+- La *fuente de datos* es de tercera mano. Si Fitbit nos enviara los datos, estos serían más precisos, confiables, pertinentes, y tendríamos más transparencia en el tratamiento de los datos. Podemos confiar en la fuente debido a que tanto el autor como el dataset están bien puntuados en Kaggle. Sabemos quien es el autor y sabemos que los datos están bajo dominio público (CC0: Dominio Público (Public Domain)). Esto otorga permiso legal y total para acceder, copiar, modificar, distribuir y utilizar los datos para este análisis sin infringir derechos de autor ni requerir permiso expreso adicional.
 
--   Los datos están *desactualizados*. La tecnología de los dispositivos y el contexto global han cambiado significativamente desde entonces.
-
+- Los datos están *desactualizados*. La tecnología de los dispositivos y el contexto global han cambiado significativamente desde entonces.
 
 ## 2.2. Diccionario de Datos
+
 ### 2.2.1. Diccionario `DATASET1`
 
 Esta tabla contiene un resumen diario de la actividad física, intensidad y calorías quemadas por cada usuario.
 
-***VOY A CAMBIAR ESTO PARA INCLUIR SÓLO LAS VARIABLES QUE YO UTILIZO Y CREO*** 
+***VOY A CAMBIAR ESTO PARA INCLUIR SÓLO LAS VARIABLES QUE YO UTILIZO Y CREO***
 
 | Nombre de la Columna | Tipo de Dato | Descripción |
-| :--- | :--- | :--- |
+|:-----------------------|:-----------------------|:-----------------------|
 | **Id** | Numérico | Identificador único asignado a cada usuario de Fitbit. |
 | **ActivityDate** | Fecha | Fecha en la que se registraron los datos de actividad (formato MM/DD/YYYY). |
 | **TotalSteps** | Numérico | Número total de pasos registrados durante ese día. |
@@ -64,7 +63,7 @@ Esta tabla contiene un resumen diario de la actividad física, intensidad y calo
 | **TrackerDistance** | Numérico | Distancia registrada de forma automática por el dispositivo Fitbit. |
 | **LoggedActivitiesDistance** | Numérico | Distancia proveniente de actividades registradas manualmente por el usuario. |
 | **VeryActiveDistance** | Numérico | Distancia recorrida durante periodos de actividad física muy intensa. |
-| **ModeratelyActiveDistance**| Numérico | Distancia recorrida durante periodos de actividad física moderada. |
+| **ModeratelyActiveDistance** | Numérico | Distancia recorrida durante periodos de actividad física moderada. |
 | **LightActiveDistance** | Numérico | Distancia recorrida durante periodos de actividad física ligera. |
 | **SedentaryActiveDistance** | Numérico | Distancia registrada mientras el usuario estaba en estado sedentario. |
 | **VeryActiveMinutes** | Numérico | Minutos totales del día en los que el usuario tuvo actividad muy intensa. |
@@ -73,19 +72,18 @@ Esta tabla contiene un resumen diario de la actividad física, intensidad y calo
 | **SedentaryMinutes** | Numérico | Minutos totales del día en los que el usuario estuvo sedentario o inactivo. |
 | **Calories** | Numérico | Estimación del total de calorías quemadas a lo largo del día. |
 
----
+------------------------------------------------------------------------
 
-### 2.2.2. Diccionario  `DATASET2`
+### 2.2.2. Diccionario `DATASET2`
 
-Esta tabla contiene registros a nivel de minuto sobre el estado de sueño de los usuarios. 
+Esta tabla contiene registros a nivel de minuto sobre el estado de sueño de los usuarios.
 
 | Nombre de la Columna | Tipo de Dato | Descripción |
-| :--- | :--- | :--- |
+|:-----------------------|:-----------------------|:-----------------------|
 | **Id** | Numérico | Identificador único asignado a cada usuario de Fitbit. |
 | **date** | Fecha y Hora | Fecha y minuto exacto en el que se tomó la lectura del estado de sueño. |
 | **value** | Numérico | Estado del sueño en ese minuto específico. Valores comunes: **1** (Dormido), **2** (Inquieto/Restless), **3** (Despierto). |
 | **logId** | Numérico | Identificador único del evento o sesión de sueño global. |
-
 
 # 3. Documentación de todas las limpiezas y manipulaciones de datos
 
@@ -93,10 +91,11 @@ Esta tabla contiene registros a nivel de minuto sobre el estado de sueño de los
 
 ```{r libraries}
 library(tidyverse)
-library(DataExplorer)
-library(lubridate)
+library(DataExplorer) # plot_intro
+library(lubridate) # times
+library(janitor) # duplicates
 
-options(scipen = 999)#to not show scientific notation
+options(scipen = 999) # to not show scientific notation
 ```
 
 ## 3.2. Data
@@ -128,6 +127,7 @@ head(minuteSleep_merged2)
 - Giving variables descriptive names
 - Giving values descriptive and easy to read names
 - Checking for NAs
+- Checking for duplicate observations and removing them
 
 ```{r joinActivity}
 dailyActivity<- 
@@ -174,33 +174,24 @@ minuteSleep<-
 head(minuteSleep)
 ```
 
-```{r sleepWide}
-sleepWide<-
-  minuteSleep |> group_by(Id, Date, Sleep_state) |> 
-  # 4. Count the rows (1 row = 1 minute)
-  summarize(total_minutes = n(), .groups = "drop")|> 
-  # 5. Pivot wider to create separate columns for Asleep, Restless, and Awake
-  pivot_wider(
-    names_from = Sleep_state,
-    values_from = total_minutes,
-    values_fill = 0 # Puts a 0 if the user had 0 minutes in a state that day
-  ) 
-
-head(sleepWide)
-```
-
-```{r joinUsers}
-#  CREO QUE ESTO NO AYUDA
-# iba a hacer algo con lo de que hay más usuarios en activity q sleep pero da igual
-# Users<-
-  # dailyActivity |> full_join(minuteSleep)
-
-```
-
 ```{r checkNAs}
 plot_intro(dailyActivity)
 plot_intro(minuteSleep)
-plot_intro(sleepWide)
+```
+
+```{r checkDuplicates}
+dailyActivity |> get_dupes() 
+minuteSleep |> get_dupes() 
+```
+
+```{r removeDuplicates}
+dailyActivity<-
+  dailyActivity |> 
+  distinct()
+
+minuteSleep<-
+  minuteSleep |>  
+  distinct()
 ```
 
 # 4. Resumen de tu análisis
@@ -211,6 +202,40 @@ plot_intro(sleepWide)
 
 ```{r usersActivity}
 dailyActivity |> distinct(Id) |> count(name="n_users")
+```
+
+```{r}
+dailyActivity |> 
+  ggplot( aes(x=Date, y=Minutes, group=Activity_intensity, color=Activity_intensity)) +
+    geom_line()
+```
+
+Me parece raro que haya un límite superior tan marcado
+
+```{r}
+dailyActivity |> filter(Activity_intensity=="Sedentary", Minutes==max(Minutes))
+```
+
+```{r}
+24*60
+```
+
+Hay 142 observaciones donde el usuario no deja de estar sedentario ni un minuto al día.
+
+```{r}
+dailyActivity |> mutate(Date=month(Date)) |> group_by(Date, Activity_intensity) |> summarise(Minutes=sum(Minutes)) |> 
+  ggplot( aes(x=Date, y=Minutes, group=Activity_intensity, color=Activity_intensity)) +
+    geom_line()
+```
+
+```{r}
+dailyActivity |> 
+  mutate(Date=month(Date)) |> 
+  group_by(Date, Activity_intensity) |> 
+  summarise(Minutes=sum(Minutes)) |> 
+  filter(Activity_intensity!="Sedentary") |> 
+  ggplot( aes(x=Date, y=Minutes, group=Activity_intensity, color=Activity_intensity)) +
+    geom_line()
 ```
 
 ```{r histActivity}
@@ -228,13 +253,103 @@ ggplot(summary_activity, aes(x=Activity_intensity, y=Minutes)) +
   geom_bar(stat = "identity")
 ```
 
-
 ```{r}
 dailyActivity |>group_by(Id,Activity_intensity) |> summarise(sum(Minutes))
 ```
 
 ```{r}
 dailyActivity |>group_by(Id) |> summarise(sum(Minutes))
+```
+
+https://estilosdevidasaludable.sanidad.gob.es/actividadFisica/actividad/recomendaciones/adultos/home.htm
+
+```{r}
+weeklyActivity<-
+  dailyActivity |>
+  # Round each date down to the start of its week
+  mutate(Week = floor_date(Date, unit = "week")) |>
+  # Group by Id and the new unique Week column
+  group_by(Id, Activity_intensity, Week) |>
+  # Summarize the minutes
+  summarise(Total_Minutes = sum(Minutes), .groups = "drop")
+```
+
+```{r}
+weeklyActivity <-
+  weeklyActivity |> 
+  pivot_wider(
+    names_from =Activity_intensity,
+    values_from = Total_Minutes
+  ) |> 
+  mutate(
+    MixActivity=(Fairly/2 + Very),
+    Healthy = case_when(
+      (MixActivity>75) ~ T,
+      Fairly>150 ~ T,
+      Very>75 ~ T,
+      .default = FALSE
+    )
+  )
+```
+
+```{r}
+  dailyActivity |>
+  # Round each date down to the start of its week
+  mutate(Week = floor_date(Date, unit = "week")) |>
+  # Group by Id and the new unique Week column
+  group_by(Id, Activity_intensity, Week) |>
+  # Summarize the minutes
+  summarise(Total_Minutes = sum(Minutes), .groups = "drop") |> 
+  pivot_wider(
+    names_from =Activity_intensity,
+    values_from = Total_Minutes
+  ) |> 
+  mutate(
+    MixActivity=(Fairly/2 + Very),
+    Healthy = case_when(
+      (MixActivity>75) ~ T,
+      Fairly>150 ~ T,
+      Very>75 ~ T,
+      .default = FALSE
+    )
+  ) |> 
+  mutate(
+    # 1. Convert the boolean to a factor with both TRUE and FALSE levels
+    Healthy = factor(Healthy, levels = c(TRUE, FALSE))
+  ) |>
+  group_by(Id) |> 
+  # 2. Add .drop = FALSE to prevent hiding the zero-count level
+  count(Healthy, .drop = FALSE)
+```
+
+Porqué alguno 8 otros 7...
+
+```{r}
+weeklyActivity |> distinct(Week)
+```
+
+Hay 10 semanas pero no todos tienen datos para todas las semanas.
+
+```{r}
+dailyActivity |>
+  summarise(
+    fecha_minima = min(Date, na.rm = TRUE),
+    fecha_maxima = max(Date, na.rm = TRUE),
+    # as.numeric convierte el resultado de "Time difference" a un número simple
+    diferencia_dias = as.numeric(fecha_maxima - fecha_minima) 
+  )
+```
+
+Hay realmente 61 días. Como el 12 cae en Jueves y no Domingo (donde empieza la semana lubridate) hay 2 semanas más que las 4 semanas por mes.
+
+```{r}
+weeklyActivity |> count(Id, Week) |> count(Id) |> arrange(n)
+```
+
+Nos faltan datos para varios usuarios. No puedo hacer una suma para ver los patrones globales porque para ciertas semanas habrá menos datos que para otras.
+
+```{r}
+weeklyActivity |> count(Id, Week) |> count(Week) |> arrange(n)
 ```
 
 ### Sueño
@@ -294,7 +409,6 @@ sleep_schedule <-
 sleep_schedule
 ```
 
-
 ```{r sleepTimes}
 # See the most common bedtimes (in 24-hour format)
 sleep_schedule |>   
@@ -347,7 +461,6 @@ ggplot(sleep_schedule, aes(x = "All Users", y = duration_hours)) +
 
 Seems low but I am adding into the boxplot the naps and those should not last 8 hours. Also, how much can I trust the values if there are people sleeping 10 hour and more.
 
-
 ```{r hstDuration}
 ggplot(sleep_schedule, aes(x = duration_hours)) +
 
@@ -385,6 +498,7 @@ ggplot(sleep_schedule, aes(x = duration_hours)) +
     axis.title = element_text(size = 11)
   )
 ```
+
 Most people are sleeping around 8 hours a night more or less. There is a big drop off in duration before six and a half and after 9. Perhaps if naps weren't included this histogram would look more like a normal distribution. Despite this, there still must be some error unaccounted for because I don't belive people are sleeping 16 hours straight.
 
 ```{r}
@@ -393,7 +507,6 @@ sleep_schedule |>
 ```
 
 I don't see a clear pattern by having a quick look.
-
 
 ```{r}
 nap<-sleep_schedule |> filter(duration_hours<= 2)
@@ -415,7 +528,6 @@ nap |>
 ```
 
 I was hoping to see that the low durations of sleep corresponded times of day associated with nap time. It seems unlikely then that people are taking 2 hour naps in the middle of the night. It's more likely that the LogId that should be measuring the full sleep attempt is failing and loging more than one sleep attempt per night of sleep thus artificially lowering the durations of the main sleep of the day.
-
 
 ```{r}
 sleep_schedule |> 
@@ -440,7 +552,6 @@ sleep_schedule |>
 
 Is this an error or does this guy have a terrible sleep schedule? In any case this tells me that having 2 LogIds in the same day doesn't necessaraly mean measurement error, nap or bad sleeping habits. They could also go to sleep after 0:00 in Tuesday (therefore is technically Wednesday) and before 0:00 the next day (also Wednesday).
 
-
 ```{r}
 nap <- 
   sleep_schedule |> 
@@ -452,7 +563,6 @@ nap <-
 not_nap <- sleep_schedule |> anti_join(nap)
   
 ```
-
 
 ```{r}
 ggplot(not_nap, aes(x = duration_hours)) +
@@ -539,6 +649,7 @@ sleep_schedule |>
   theme_minimal() +
   theme(legend.position = "top")
 ```
+
 This proves that naps are not common, yet late bedtimes are.
 
 ```{r bxpltDurationWkDay}
@@ -572,18 +683,15 @@ WTF es esto por dios.
 
 # 5. Visualizaciones de respaldo y hallazgos clave
 
+## Actividad
+
 ## Sueño visualisations
-
-
-
-
-
 
 # 6. Las tres recomendaciones de contenido de alto nivel basadas en tu análisis
 
 # Dudas / apuntes
 
--   time worn per day parece interesante
+- time worn per day parece interesante
 
 Qué pregunta intentas responder y para quién. Cómo has limpiado y comprobado los datos. Qué conclusiones respaldan los resultados y qué limitaciones tienen. Qué recomendarías hacer y qué información adicional necesitaría
 
@@ -591,7 +699,7 @@ Qué pregunta intentas responder y para quién. Cómo has limpiado y comprobado 
 
 En el manejo de datos de salud y comportamiento de usuarios, es fundamental garantizar prácticas éticas y responsables. Para este caso de estudio, estos cuatro pilares se han abordado de la siguiente manera:
 
-*   **Autorización:** El conjunto de datos *Fitbit Fitness Tracker Data* fue publicado en la plataforma Kaggle bajo la licencia **CC0: Dominio Público (Public Domain)**. Esto otorga permiso legal y total para acceder, copiar, modificar, distribuir y utilizar los datos para este análisis sin infringir derechos de autor ni requerir permiso expreso adicional.
-*   **Privacidad:** Los datos están completamente **anonimizados**. El conjunto de datos no contiene Información de Identificación Personal (PII, por sus siglas en inglés) como nombres, direcciones, correos electrónicos o números de teléfono. Cada individuo está representado exclusivamente por un identificador numérico único de 10 dígitos (la columna `Id`), lo que garantiza que no se pueda rastrear la actividad hasta un usuario real.
-*   **Seguridad:** Para proteger la integridad de la información, los archivos originales (CSV) se descargaron y almacenaron en un entorno local y privado. Se aplicó el principio de preservación de datos en bruto (*raw data*): los archivos originales se guardaron en una carpeta separada y no se modificaron manualmente. Toda la limpieza, transformación y análisis se realizó mediante scripts (código en R o SQL), asegurando que el proceso sea auditable y que los datos originales permanezcan seguros e inalterables.
-*   **Accesibilidad:** Desde la perspectiva de los datos, la fuente es abierta y pública, lo que permite que cualquier otro analista pueda acceder a ellos en Kaggle para replicar o verificar este estudio. Además, en la presentación de este reporte, se ha procurado que la información sea accesible mediante el uso de tablas estructuradas y visualizaciones claras (considerando paletas de colores legibles) para facilitar la comprensión de los *insights* a cualquier tipo de audiencia o *stakeholder*.
+- **Autorización:** El conjunto de datos *Fitbit Fitness Tracker Data* fue publicado en la plataforma Kaggle bajo la licencia **CC0: Dominio Público (Public Domain)**. Esto otorga permiso legal y total para acceder, copiar, modificar, distribuir y utilizar los datos para este análisis sin infringir derechos de autor ni requerir permiso expreso adicional.
+- **Privacidad:** Los datos están completamente **anonimizados**. El conjunto de datos no contiene Información de Identificación Personal (PII, por sus siglas en inglés) como nombres, direcciones, correos electrónicos o números de teléfono. Cada individuo está representado exclusivamente por un identificador numérico único de 10 dígitos (la columna `Id`), lo que garantiza que no se pueda rastrear la actividad hasta un usuario real.
+- **Seguridad:** Para proteger la integridad de la información, los archivos originales (CSV) se descargaron y almacenaron en un entorno local y privado. Se aplicó el principio de preservación de datos en bruto (*raw data*): los archivos originales se guardaron en una carpeta separada y no se modificaron manualmente. Toda la limpieza, transformación y análisis se realizó mediante scripts (código en R o SQL), asegurando que el proceso sea auditable y que los datos originales permanezcan seguros e inalterables.
+- **Accesibilidad:** Desde la perspectiva de los datos, la fuente es abierta y pública, lo que permite que cualquier otro analista pueda acceder a ellos en Kaggle para replicar o verificar este estudio. Además, en la presentación de este reporte, se ha procurado que la información sea accesible mediante el uso de tablas estructuradas y visualizaciones claras (considerando paletas de colores legibles) para facilitar la comprensión de los *insights* a cualquier tipo de audiencia o *stakeholder*.
