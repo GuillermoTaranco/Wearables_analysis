@@ -205,46 +205,30 @@ dailyActivity |> distinct(Id) |> count(name="n_users")
 ```
 
 ```{r}
-dailyActivity |> 
-  ggplot( aes(x=Date, y=Minutes, group=Activity_intensity, color=Activity_intensity)) +
-    geom_line()
+dailyActivity |>group_by(Activity_intensity) |> summarise(sum(Minutes), max(Minutes)) 
 ```
 
-Me parece raro que haya un límite superior tan marcado
 
 ```{r}
 dailyActivity |> filter(Activity_intensity=="Sedentary", Minutes==max(Minutes))
 ```
 
+Me parece raro que tanta gente tenga exactamente la misma cantidad de minutos.
+
 ```{r}
 24*60
 ```
+Resulta que hay 142 observaciones donde el usuario no deja de estar sedentario ni un minuto al día.
 
-Hay 142 observaciones donde el usuario no deja de estar sedentario ni un minuto al día.
-
-```{r}
-dailyActivity |> mutate(Date=month(Date)) |> group_by(Date, Activity_intensity) |> summarise(Minutes=sum(Minutes)) |> 
-  ggplot( aes(x=Date, y=Minutes, group=Activity_intensity, color=Activity_intensity)) +
-    geom_line()
-```
+¿Cuantos usuarios son responsables?
 
 ```{r}
-dailyActivity |> 
-  mutate(Date=month(Date)) |> 
-  group_by(Date, Activity_intensity) |> 
-  summarise(Minutes=sum(Minutes)) |> 
-  filter(Activity_intensity!="Sedentary") |> 
-  ggplot( aes(x=Date, y=Minutes, group=Activity_intensity, color=Activity_intensity)) +
-    geom_line()
+dailyActivity |> filter(Activity_intensity=="Sedentary", Minutes==max(Minutes)) |> count(Id) |> arrange(desc(n))
 ```
 
-```{r histActivity}
-dailyActivity |> pull(Minutes) |> hist()
-```
+21 usuarios de 35 han tenido días donde no se han movido nada en todo el día. El usuario 4020332650 es el que tiene más días sin moverse.
 
-```{r}
-dailyActivity |>group_by(Activity_intensity) |> summarise(sum(Minutes))
-```
+¿Cómo de sedentarios son?
 
 ```{r}
 summary_activity<-dailyActivity |>group_by(Activity_intensity) |> summarise(Minutes=sum(Minutes)) 
@@ -253,30 +237,28 @@ ggplot(summary_activity, aes(x=Activity_intensity, y=Minutes)) +
   geom_bar(stat = "identity")
 ```
 
-```{r}
-dailyActivity |>group_by(Id,Activity_intensity) |> summarise(sum(Minutes))
-```
 
-```{r}
-dailyActivity |>group_by(Id) |> summarise(sum(Minutes))
+```{r histActivity}
+dailyActivity |> filter(Activity_intensity=="Sedentary")|> pull(Minutes) |> hist()
+dailyActivity |> filter(Activity_intensity=="Lightly")|> pull(Minutes) |> hist()
+dailyActivity |> filter(Activity_intensity=="Fairly")|> pull(Minutes) |> hist()
+dailyActivity |> filter(Activity_intensity=="Very")|> pull(Minutes) |> hist()
 ```
+But these graph don't tell the hole picture. How healthy are they? what should they be shooting for?
+
+#### Healthy
 
 https://estilosdevidasaludable.sanidad.gob.es/actividadFisica/actividad/recomendaciones/adultos/home.htm
 
-```{r}
+```{r weeklyActivity}
 weeklyActivity<-
   dailyActivity |>
-  # Round each date down to the start of its week
+  # Round each date down to the start of its week. For lubridate it starts on Sunday
   mutate(Week = floor_date(Date, unit = "week")) |>
   # Group by Id and the new unique Week column
   group_by(Id, Activity_intensity, Week) |>
   # Summarize the minutes
-  summarise(Total_Minutes = sum(Minutes), .groups = "drop")
-```
-
-```{r}
-weeklyActivity <-
-  weeklyActivity |> 
+  summarise(Total_Minutes = sum(Minutes), .groups = "drop")|> 
   pivot_wider(
     names_from =Activity_intensity,
     values_from = Total_Minutes
@@ -286,43 +268,16 @@ weeklyActivity <-
     Healthy = case_when(
       (MixActivity>75) ~ T,
       Fairly>150 ~ T,
-      Very>75 ~ T,
+      # Very>75 ~ T, # Si Very + (Fairly/2)  no es mayor que 75. Very + 0 no puede ser mayor de 75
       .default = FALSE
     )
   )
+
+head(weeklyActivity,10)
 ```
 
-```{r}
-  dailyActivity |>
-  # Round each date down to the start of its week
-  mutate(Week = floor_date(Date, unit = "week")) |>
-  # Group by Id and the new unique Week column
-  group_by(Id, Activity_intensity, Week) |>
-  # Summarize the minutes
-  summarise(Total_Minutes = sum(Minutes), .groups = "drop") |> 
-  pivot_wider(
-    names_from =Activity_intensity,
-    values_from = Total_Minutes
-  ) |> 
-  mutate(
-    MixActivity=(Fairly/2 + Very),
-    Healthy = case_when(
-      (MixActivity>75) ~ T,
-      Fairly>150 ~ T,
-      Very>75 ~ T,
-      .default = FALSE
-    )
-  ) |> 
-  mutate(
-    # 1. Convert the boolean to a factor with both TRUE and FALSE levels
-    Healthy = factor(Healthy, levels = c(TRUE, FALSE))
-  ) |>
-  group_by(Id) |> 
-  # 2. Add .drop = FALSE to prevent hiding the zero-count level
-  count(Healthy, .drop = FALSE)
-```
+##### clasificación semanas
 
-Porqué alguno 8 otros 7...
 
 ```{r}
 weeklyActivity |> distinct(Week)
@@ -342,15 +297,56 @@ dailyActivity |>
 
 Hay realmente 61 días. Como el 12 cae en Jueves y no Domingo (donde empieza la semana lubridate) hay 2 semanas más que las 4 semanas por mes.
 
-```{r}
-weeklyActivity |> count(Id, Week) |> count(Id) |> arrange(n)
-```
-
-Nos faltan datos para varios usuarios. No puedo hacer una suma para ver los patrones globales porque para ciertas semanas habrá menos datos que para otras.
 
 ```{r}
 weeklyActivity |> count(Id, Week) |> count(Week) |> arrange(n)
 ```
+
+Nos faltan datos para varios usuarios en varias semanas. No puedo ver los patrones globales porque para ciertas semanas habrá menos datos que para otras. Pero eso no importa para ver la salud de un usuario semana por semana.
+
+
+```{r}
+weeklyActivity |> count(Id, Week) |> count(Id) |> arrange(desc(n))
+```
+
+```{r}
+dailyActivity |> filter(Id==4020332650) |> mutate(Date=floor_date(Date, unit = "week")) |> group_by(Date, Activity_intensity) |> summarise(Minutes=sum(Minutes)) |> 
+  ggplot( aes(x=Date, y=Minutes, group=Activity_intensity, color=Activity_intensity)) +
+    geom_line()
+```
+
+```{r histActivity}
+weeklyActivity |> filter(Healthy) |> pull(Minutes) |> hist()
+```
+
+```{r}
+dailyActivity |> 
+  group_by(Id) |> 
+  summarize(days_used = n_distinct(Date)) |> 
+  arrange(desc(days_used))
+```
+
+```{r}
+holeWeek<-
+  dailyActivity |> 
+  group_by(Id, Week=floor_date(Date, unit = "week")) |> 
+  summarize(days_used = n_distinct(Date)) |> 
+  filter(days_used>6)
+```
+
+```{r}
+holeWeek |> count(Id) |> arrange(desc(n))
+```
+
+
+
+```{r}
+  dailyActivity |> 
+  group_by(Id, Week=floor_date(Date, unit = "week")) |> 
+  summarize(days_used = n_distinct(Date)) |> filter(Id==4020332650)
+```
+
+
 
 ### Sueño
 
@@ -482,7 +478,7 @@ ggplot(sleep_schedule, aes(x = duration_hours)) +
   
   # 4. Enhance readability and formatting
   scale_x_continuous(
-    breaks = seq(0, max(sleep_duration$duration_hours, na.rm = TRUE) + 1, by = 1)
+    breaks = seq(0, max(sleep_schedule$duration_hours, na.rm = TRUE) + 1, by = 1)
     ) +
   labs(
     title = "Sleep Duration Distribution",
@@ -513,7 +509,7 @@ nap<-sleep_schedule |> filter(duration_hours<= 2)
 
 # Using the sleep_schedule dataframe from the previous step
 nap |> 
-  ggplot(aes(x = bed_hour)) +
+  ggplot(aes(x = hour(bedtime))) +
   # Set a single static color since we aren't comparing two events anymore
   geom_bar(fill = "#2c3e50", color = "black", alpha = 0.8) +
   # Force the x-axis to show every hour from 0 to 23
@@ -585,7 +581,7 @@ ggplot(not_nap, aes(x = duration_hours)) +
   
   # 4. Enhance readability and formatting
   scale_x_continuous(
-    breaks = seq(0, max(sleep_duration$duration_hours, na.rm = TRUE) + 1, by = 1)
+    breaks = seq(0, max(sleep_schedule$duration_hours, na.rm = TRUE) + 1, by = 1)
     ) +
   labs(
     title = "Sleep Duration Distribution",
