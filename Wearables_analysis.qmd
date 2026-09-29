@@ -366,14 +366,8 @@ weeklyLong
 
 
 ```{r}
-weeklyLong |> filter(Id==4020332650, Activity_intensity=="MixActivity") |> 
-  ggplot( aes(x=Week, y=Minutes, group=Activity_intensity, color=Activity_intensity)) +
-    geom_line()
-```
-
-```{r}
 weeklyLong |> 
-  filter(Id == 4020332650, Activity_intensity == "MixActivity") |> 
+  filter(Id == 4020332650, Activity_intensity == "MixActivity", Week ) |> 
   ggplot(aes(x = Week, y = Minutes, group = Activity_intensity)) +
   
   # 1. Shaded background for the "Healthy" zone (> 75 mins)
@@ -409,8 +403,122 @@ weeklyLong |>
   )
 ```
 
+```{r}
+# choose an Id to show their progress in the next graph
+
+dailyActivity |> distinct(Id)
+
+Id_choice <- "1927972279"
+```
 
 
+```{r}
+weeklyLong |> 
+  filter(Id == Id_choice, Activity_intensity == "MixActivity") |> 
+  # This joins the datasets, keeping ONLY the rows in weeklyLong that have a matching Id and Week in holeWeek
+  inner_join(holeWeek, by = c("Id", "Week")) |> 
+  
+  ggplot(aes(x = Week, y = Minutes, group = Activity_intensity)) +
+  
+  # 1. Shaded background for the "Healthy" zone (> 75 mins)
+  annotate("rect", xmin = as.Date(-Inf), xmax = as.Date(Inf), ymin = 75, ymax = Inf, 
+           fill = "#e5f5e0", alpha = 0.5) +
+  
+  # 2. The threshold abline
+  geom_hline(yintercept = 75, linetype = "dashed", color = "#2ca25f", linewidth = 1) +
+  
+  # 3. Label for the threshold
+  annotate("text", x = as.Date(-Inf), y = 75, label = " Healthy Goal (75+ Min)", 
+           vjust = -1, hjust = -0.05, color = "#1b7837", fontface = "bold") +
+  
+  # 4. Connected Scatterplot (Lines + Points)
+  geom_line(color = "#2b8cbe", linewidth = 1.2) +
+  geom_point(color = "#2b8cbe", fill = "white", size = 3.5, shape = 21, stroke = 1.5) +
+  
+  # 5. Beautiful theming and labels
+  labs(
+    title = "Mixed Activity Duration Over Time",
+    subtitle = "Showing only complete 7-day weeks",
+    x = "Week",
+    y = "Total Minutes"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 18, color = "#333333"),
+    plot.subtitle = element_text(size = 12, color = "#666666", margin = margin(b = 15)),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(), 
+    axis.line.x = element_line(color = "gray80"),
+    axis.ticks.x = element_line(color = "gray80", linewidth = 0.5)
+  )
+```
+
+```{r}
+weeklyLong |> 
+  filter(Activity_intensity == "MixActivity") |> 
+  # Join first to ensure we only consider complete weeks
+  inner_join(holeWeek, by = c("Id", "Week")) |> 
+  # Randomly sample exactly 2 unique IDs every time the code runs
+  filter(Id %in% sample(unique(Id), 2)) |> 
+  
+  ggplot(aes(x = Week, y = Minutes)) +
+  
+  # 1. Shaded background for the "Healthy" zone
+  annotate("rect", xmin = as.Date(-Inf), xmax = as.Date(Inf), ymin = 75, ymax = Inf, 
+           fill = "#e5f5e0", alpha = 0.5) +
+  
+  # 2. The threshold abline
+  geom_hline(yintercept = 75, linetype = "dashed", color = "#2ca25f", linewidth = 1) +
+  
+  # 3. Label for the threshold
+  annotate("text", x = as.Date(-Inf), y = 75, label = " Healthy Goal (75+ Min)", 
+           vjust = -1, hjust = -0.05, color = "#1b7837", fontface = "bold", size = 3.5) +
+  
+  # 4. Connected Scatterplot
+  geom_line(color = "#2b8cbe", linewidth = 1.2) +
+  geom_point(color = "#2b8cbe", fill = "white", size = 3.5, shape = 21, stroke = 1.5) +
+  
+  # 5. Facet by Id, stacking them vertically for easy time-series comparison
+  facet_wrap(~ Id, ncol = 1) +
+  
+  # 6. Beautiful theming and labels
+  labs(
+    title = "Mixed Activity Duration Over Time",
+    subtitle = "Comparing two random users (complete 7-day weeks only)",
+    x = "Week",
+    y = "Total Minutes"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 18, color = "#333333"),
+    plot.subtitle = element_text(size = 12, color = "#666666", margin = margin(b = 15)),
+    # Style the facet headers (strips) to stand out
+    strip.text = element_text(face = "bold", size = 12, color = "white"),
+    strip.background = element_rect(fill = "#2b8cbe", color = NA),
+    # Clean up gridlines
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(), 
+    axis.line.x = element_line(color = "gray80"),
+    axis.ticks.x = element_line(color = "gray80", linewidth = 0.5),
+    panel.spacing = unit(2, "lines") # Adds breathing room between the two charts
+  )
+```
+
+
+```{r}
+weeklyLong |> 
+  filter(Id == "4020332650") |> 
+  # This joins the datasets, keeping ONLY the rows in weeklyLong that have a matching Id and Week in holeWeek
+  inner_join(holeWeek, by = c("Id", "Week"))
+```
+
+```{r}
+1440*7
+```
+
+```{r}
+weeklyLong |> filter(!Healthy) |> distinct(Id)
+```
 
 
 ### Sueño
