@@ -28,6 +28,8 @@ Los participantes fueron reclutados a través de una encuesta en la plataforma A
 
 Además de la información contenida en la página de Github también ha sido necesario consultar la [documentación de web-API de Fitbit](https://dev.fitbit.com/build/reference/web-api) para entender lo que representan ciertas variables y ciertos valores.
 
+Los datos de Kaggle fueron descargados el 17/09/2026.
+
 ## 2.1. Sesgos, credibilidad y alcance de los datos
 
 Hay varios aspectos que sesgan y limítan el alcance y credibilidad de este estudio:
@@ -204,39 +206,41 @@ minuteSleep<-
 dailyActivity |> distinct(Id) |> count(name="n_users")
 ```
 
-```{r}
-dailyActivity |>group_by(Activity_intensity) |> summarise(sum(Minutes), max(Minutes)) 
+```{r intensityOverTime}
+dailyActivity |> 
+  ggplot( aes(x=Date, y=Minutes, group=Activity_intensity, color=Activity_intensity)) +
+    geom_line()
 ```
 
+This graph is wrong but it lead me to ask the question: Why is there such a sharp upper limit?
 
 ```{r}
 dailyActivity |> filter(Activity_intensity=="Sedentary", Minutes==max(Minutes))
 ```
 
-Me parece raro que tanta gente tenga exactamente la misma cantidad de minutos.
 
 ```{r}
 24*60
 ```
 Resulta que hay 142 observaciones donde el usuario no deja de estar sedentario ni un minuto al día.
 
-¿Cuantos usuarios son responsables?
+¿A cuantos usuarios corresponden estas observaciones?
 
 ```{r}
 dailyActivity |> filter(Activity_intensity=="Sedentary", Minutes==max(Minutes)) |> count(Id) |> arrange(desc(n))
 ```
 
-21 usuarios de 35 han tenido días donde no se han movido nada en todo el día. El usuario 4020332650 es el que tiene más días sin moverse.
+21 usuarios de 35 han tenido días donde no se han movido nada en todo el día. El usuario 4020332650 tiene 24 días sin moverse.
 
 ¿Cómo de sedentarios son?
 
 ```{r}
-summary_activity<-dailyActivity |>group_by(Activity_intensity) |> summarise(Minutes=sum(Minutes)) 
-
-ggplot(summary_activity, aes(x=Activity_intensity, y=Minutes)) + 
+dailyActivity |>
+  group_by(Activity_intensity) |> 
+  summarise(Minutes=sum(Minutes)) |> 
+  ggplot( aes(x=Activity_intensity, y=Minutes)) + 
   geom_bar(stat = "identity")
 ```
-
 
 ```{r histActivity}
 dailyActivity |> filter(Activity_intensity=="Sedentary")|> pull(Minutes) |> hist()
@@ -251,7 +255,7 @@ But these graph don't tell the hole picture. How healthy are they? what should t
 https://estilosdevidasaludable.sanidad.gob.es/actividadFisica/actividad/recomendaciones/adultos/home.htm
 
 ```{r weeklyActivity}
-weeklyActivity<-
+weeklyActivity <-
   dailyActivity |>
   # Round each date down to the start of its week. For lubridate it starts on Sunday
   mutate(Week = floor_date(Date, unit = "week")) |>
@@ -276,7 +280,7 @@ weeklyActivity<-
 head(weeklyActivity,10)
 ```
 
-##### clasificación semanas
+##### clasificación días y semanas detour
 
 
 ```{r}
@@ -295,7 +299,7 @@ dailyActivity |>
   )
 ```
 
-Hay realmente 61 días. Como el 12 cae en Jueves y no Domingo (donde empieza la semana lubridate) hay 2 semanas más que las 4 semanas por mes.
+Hay realmente 61 días. 62 días contando el día 0 de fecha_minima. Como el 12 cae en Jueves y no Domingo (donde empieza la semana lubridate) hay 2 semanas más que las 4 semanas por mes.
 
 
 ```{r}
@@ -307,16 +311,6 @@ Nos faltan datos para varios usuarios en varias semanas. No puedo ver los patron
 
 ```{r}
 weeklyActivity |> count(Id, Week) |> count(Id) |> arrange(desc(n))
-```
-
-```{r}
-dailyActivity |> filter(Id==4020332650) |> mutate(Date=floor_date(Date, unit = "week")) |> group_by(Date, Activity_intensity) |> summarise(Minutes=sum(Minutes)) |> 
-  ggplot( aes(x=Date, y=Minutes, group=Activity_intensity, color=Activity_intensity)) +
-    geom_line()
-```
-
-```{r histActivity}
-weeklyActivity |> filter(Healthy) |> pull(Minutes) |> hist()
 ```
 
 ```{r}
@@ -332,6 +326,8 @@ holeWeek<-
   group_by(Id, Week=floor_date(Date, unit = "week")) |> 
   summarize(days_used = n_distinct(Date)) |> 
   filter(days_used>6)
+
+holeWeek
 ```
 
 ```{r}
@@ -345,6 +341,75 @@ holeWeek |> count(Id) |> arrange(desc(n))
   group_by(Id, Week=floor_date(Date, unit = "week")) |> 
   summarize(days_used = n_distinct(Date)) |> filter(Id==4020332650)
 ```
+```{r}
+weeklyActivity
+```
+
+##### visualizaciones exploratorias healthy
+
+```{r histHealthy}
+weeklyActivity |> filter(Healthy) |> pull(MixActivity) |> hist()
+```
+
+```{r histUnhealthy}
+weeklyActivity |> filter(!Healthy) |> pull(MixActivity) |> hist()
+```
+
+```{r}
+weeklyLong<-
+  weeklyActivity|> pivot_longer(cols = c(seq(3,7)),
+                               values_to="Minutes",
+                               names_to="Activity_intensity")
+
+weeklyLong
+```
+
+
+```{r}
+weeklyLong |> filter(Id==4020332650, Activity_intensity=="MixActivity") |> 
+  ggplot( aes(x=Week, y=Minutes, group=Activity_intensity, color=Activity_intensity)) +
+    geom_line()
+```
+
+```{r}
+weeklyLong |> 
+  filter(Id == 4020332650, Activity_intensity == "MixActivity") |> 
+  ggplot(aes(x = Week, y = Minutes, group = Activity_intensity)) +
+  
+  # 1. Shaded background for the "Healthy" zone (> 75 mins)
+  annotate("rect", xmin = -Inf, xmax = Inf, ymin = 75, ymax = Inf, 
+           fill = "#e5f5e0", alpha = 0.5) +
+  
+  # 2. The threshold abline
+  geom_hline(yintercept = 75, linetype = "dashed", color = "#2ca25f", linewidth = 1) +
+  
+  # 3. Label for the threshold
+  annotate("text", x = -Inf, y = 75, label = " Healthy Goal (75+ Min)", 
+           vjust = -1, hjust = -0.05, color = "#1b7837", fontface = "bold") +
+  
+  # 4. Connected Scatterplot (Lines + Points)
+  geom_line(color = "#2b8cbe", linewidth = 1.2) +
+  geom_point(color = "#2b8cbe", fill = "white", size = 3.5, shape = 21, stroke = 1.5) +
+  
+  # 5. Beautiful theming and labels
+  labs(
+    title = "Mixed Activity Duration Over Time",
+    subtitle = "Tracking weekly minutes against the 75-minute health goal",
+    x = "Week",
+    y = "Total Minutes"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 18, color = "#333333"),
+    plot.subtitle = element_text(size = 12, color = "#666666", margin = margin(b = 15)),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(), # Removes vertical grid lines for a cleaner look
+    axis.line.x = element_line(color = "gray80"),
+    axis.ticks.x = element_line(color = "gray80", size = 0.5)
+  )
+```
+
+
 
 
 
