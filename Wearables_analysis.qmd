@@ -254,7 +254,7 @@ But these graph don't tell the hole picture. How healthy are they? what should t
 
 https://estilosdevidasaludable.sanidad.gob.es/actividadFisica/actividad/recomendaciones/adultos/home.htm
 
-```{r weeklyActivity}
+```{r }
 weeklyActivity <-
   dailyActivity |>
   # Round each date down to the start of its week. For lubridate it starts on Sunday
@@ -362,6 +362,10 @@ weeklyLong<-
                                names_to="Activity_intensity")
 
 weeklyLong
+```
+
+```{r}
+1440*7 # number of minutes a day possible * 7 to get weekly upper limit
 ```
 
 
@@ -504,21 +508,89 @@ weeklyLong |>
   )
 ```
 
-
 ```{r}
-weeklyLong |> 
-  filter(Id == "4020332650") |> 
-  # This joins the datasets, keeping ONLY the rows in weeklyLong that have a matching Id and Week in holeWeek
+# 1. Prepare the clean, joined dataset first so we aren't doing it inside the loop
+clean_data <- weeklyLong |> 
+  filter(Activity_intensity == "MixActivity") |> 
   inner_join(holeWeek, by = c("Id", "Week"))
+
+# 2. Get a vector of all the unique IDs
+unique_ids <- unique(clean_data$Id)
+
+# 3. Loop through each ID and print a distinct chart
+for (i in unique_ids) {
+  
+  # Filter for just the current ID in the loop
+  user_data <- clean_data |> 
+    filter(Id == i)
+  
+  # Build the plot
+  p <- ggplot(user_data, aes(x = Week, y = Minutes)) +
+    
+    # Shaded background for the "Healthy" zone
+    annotate("rect", xmin = as.Date(-Inf), xmax = as.Date(Inf), ymin = 75, ymax = Inf, 
+             fill = "#e5f5e0", alpha = 0.5) +
+    
+    # The threshold abline
+    geom_hline(yintercept = 75, linetype = "dashed", color = "#2ca25f", linewidth = 1) +
+    
+    # Label for the threshold
+    annotate("text", x = as.Date(-Inf), y = 75, label = " Healthy Goal (75+ Min)", 
+             vjust = -1, hjust = -0.05, color = "#1b7837", fontface = "bold") +
+    
+    # Connected Scatterplot (restored back to the larger size)
+    geom_line(color = "#2b8cbe", linewidth = 1.2) +
+    geom_point(color = "#2b8cbe", fill = "white", size = 3.5, shape = 21, stroke = 1.5) +
+    
+    # Dynamic title using paste() to show the current ID
+    labs(
+      title = paste("Mixed Activity Duration | User ID:", i),
+      subtitle = "Tracking weekly minutes (Complete 7-day weeks only)",
+      x = "Week",
+      y = "Total Minutes"
+    ) +
+    theme_minimal(base_size = 14) +
+    theme(
+      plot.title = element_text(face = "bold", size = 16, color = "#333333"),
+      plot.subtitle = element_text(size = 12, color = "#666666", margin = margin(b = 15)),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank(), 
+      axis.line.x = element_line(color = "gray80"),
+      axis.ticks.x = element_line(color = "gray80", linewidth = 0.5)
+    )
+  
+  # 4. Explicitly print the plot (required inside loops)
+  print(p)
+}
 ```
 
-```{r}
-1440*7
-```
+
 
 ```{r}
-weeklyLong |> filter(!Healthy) |> distinct(Id)
+clean_data |> 
+  mutate(
+    # Convert the boolean to a factor with both TRUE and FALSE levels
+    Healthy = factor(Healthy, levels = c(TRUE, FALSE))
+  ) |>
+  group_by(Id) |> 
+  # Add .drop = FALSE to prevent hiding the zero-count level
+  count(Healthy, .drop = FALSE) |> 
+  pivot_wider(names_from = Healthy, values_from = n) |> 
+  rename("verdadero"="TRUE", "falso"="FALSE") |> 
+  mutate(pct_healthy = (verdadero / (verdadero + falso))*100) |> 
+  group_by(pct_healthy) |> 
+  count(pct_healthy)
 ```
+
+16 completamente en el verde
+9 mezcla
+9 completamente blanco
+
+
+
+
+
+
 
 
 ### Sueño
@@ -529,7 +601,7 @@ minuteSleep |> distinct(Id) |> count(name="n_users")
 
 Menos que los 35 usuarios de activity
 
-```{r}
+```{r compareDatasets}
 dailyActivity |> 
   anti_join(minuteSleep, by = "Id") |> 
   select(Id) |> 
@@ -547,6 +619,13 @@ Hay 10 usuarios que están en dailyActivity y no en minuteSleep. No hay ningún 
 
 ```{r stateDistribution}
 minuteSleep |> count(Sleep_state)
+```
+
+```{r}
+minuteSleep |> 
+  count(Sleep_state) |> 
+  ggplot( aes(x=Sleep_state, y=n)) + 
+  geom_bar(stat = "identity")
 ```
 
 ```{r userSleep}
@@ -628,7 +707,7 @@ ggplot(sleep_schedule, aes(x = "All Users", y = duration_hours)) +
 
 ```
 
-Seems low but I am adding into the boxplot the naps and those should not last 8 hours. Also, how much can I trust the values if there are people sleeping 10 hour and more.
+Seems low but I am adding into the boxplot the naps and those should not last 8 hours. Also, how much can I trust the values if there are people sleeping 10 hours and more.
 
 ```{r hstDuration}
 ggplot(sleep_schedule, aes(x = duration_hours)) +
@@ -853,6 +932,143 @@ WTF es esto por dios.
 # 5. Visualizaciones de respaldo y hallazgos clave
 
 ## Actividad
+
+copio y pego muchas cosas del análisis exploratorio de manera que lo pongo más legible para el futuro report
+
+### ¿Cómo de sedentarios son nuestra muestra de usuarios?
+
+```{r groupActivity}
+dailyActivity |>
+  group_by(Activity_intensity) |> 
+  summarise(Minutes=sum(Minutes)) |> 
+  ggplot( aes(x=Activity_intensity, y=Minutes)) + 
+  geom_bar(stat = "identity")
+```
+
+Según el [Ministerio de sanidad español](https://estilosdevidasaludable.sanidad.gob.es/actividadFisica/actividad/recomendaciones/adultos/home.htm), para evitar el sedentarismo, la población adulta debe realizar *a lo largo de la semana* un mínimo de:
+
+-   150 minutos de actividad física moderada
+-   75 minutos de actividad física vigorosa
+-   Una combinación equivalente (considerando 2 minuto de actividad moderada como equivalente a 1 minuto de actividad vigorosa )
+
+Para el presente estudio, hacemos un sumatorio de la actividad diaria para obtener los indicadores por semana. Además, utilizaremos como métrica principal la combinación de actividades bajo el nombre de "MixActivity". Este es la suma de la actividad moderada (fairly) más la actividad vigorosa (very). La actividad moderada se divide entre 2, porque, como indica el ministerio de sanidad, la actividad vigorosa es más importante para evitar el sedentarismo.
+
+```{r weeklyActivity}
+weeklyActivity <-
+  dailyActivity |>
+  # Round each date down to the start of its week. For lubridate it starts on Sunday
+  mutate(Week = floor_date(Date, unit = "week")) |>
+  # Group by Id and the new unique Week column
+  group_by(Id, Activity_intensity, Week) |>
+  # Summarize the minutes
+  summarise(Total_Minutes = sum(Minutes), .groups = "drop")|> 
+  pivot_wider(
+    names_from =Activity_intensity,
+    values_from = Total_Minutes
+  ) |> 
+  mutate(
+    MixActivity=(Fairly/2 + Very),
+    Healthy = case_when(
+      (MixActivity>75) ~ T,
+      Fairly>150 ~ T,
+      # Very>75 ~ T, # Si Very + (Fairly/2)  no es mayor que 75. Very + 0 no puede ser mayor de 75
+      .default = FALSE
+    )
+  )
+
+head(weeklyActivity,10)
+```
+
+Sin embargo, los usuarios no utilizan de manera constante sus dispositivos.  Una semana puede tener datos de uso de todos los días de la semana, pero también puede tener los datos de un sólo día ocurrido en esa semana. Por este motivo debemos tratar los datos para que los minutos por semana siempre se refieran al sumatorio de minutos de los 7 días.
+
+
+```{r holeWeek}
+holeWeek <-
+  dailyActivity |> 
+  group_by(Id, Week=floor_date(Date, unit = "week")) |> 
+  summarize(days_used = n_distinct(Date)) |> 
+  filter(days_used>6)
+```
+
+```{r weeklyLong}
+weeklyLong <-
+  weeklyActivity|> 
+  pivot_longer(
+    cols = c(seq(3,7)),
+    values_to="Minutes",
+    names_to="Activity_intensity"
+    )
+```
+
+```{r weeklyClean}
+weeklyClean <- 
+  weeklyLong |> 
+  filter(Activity_intensity == "MixActivity") |> 
+  inner_join(holeWeek, by = c("Id", "Week"))
+```
+
+A continuación mostramos 3 gráficos de lineas de puntos. Cada punto representa el sumatorio de minutos de actividad mixta de una semana determinada. Cada gráfico representa la evolución de actividad de un usuario distinto en el periodo de recogida de datos de 2 meses. He escogido a mano los usuarios más representativos de las categorias que quiero recomendar que Bellabeat adopte.
+
+
+```{r notableProfiles}
+# 2. Get a vector of all the unique IDs
+notableProfiles <- c(8053475328,
+                4020332650,
+                2026352035)
+
+# 3. Loop through each ID and print a distinct chart
+for (i in notableProfiles) {
+  
+  # Filter for just the current ID in the loop
+  user_data <- clean_data |> 
+    filter(Id == i)
+  
+  # Build the plot
+  p <- ggplot(user_data, aes(x = Week, y = Minutes)) +
+    
+    # Shaded background for the "Healthy" zone
+    annotate("rect", xmin = as.Date(-Inf), xmax = as.Date(Inf), ymin = 75, ymax = Inf, 
+             fill = "#e5f5e0", alpha = 0.5) +
+    
+    # The threshold abline
+    geom_hline(yintercept = 75, linetype = "dashed", color = "#2ca25f", linewidth = 1) +
+    
+    # Label for the threshold
+    annotate("text", x = as.Date(-Inf), y = 75, label = " Healthy Goal (75+ Min)", 
+             vjust = -1, hjust = -0.05, color = "#1b7837", fontface = "bold") +
+    
+    # Connected Scatterplot (restored back to the larger size)
+    geom_line(color = "#2b8cbe", linewidth = 1.2) +
+    geom_point(color = "#2b8cbe", fill = "white", size = 3.5, shape = 21, stroke = 1.5) +
+    
+    # Dynamic title using paste() to show the current ID
+    labs(
+      title = paste("Mixed Activity Duration | User ID:", i),
+      subtitle = "Tracking weekly minutes (Complete 7-day weeks only)",
+      x = "Week",
+      y = "Total Minutes"
+    ) +
+    theme_minimal(base_size = 14) +
+    theme(
+      plot.title = element_text(face = "bold", size = 16, color = "#333333"),
+      plot.subtitle = element_text(size = 12, color = "#666666", margin = margin(b = 15)),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank(), 
+      axis.line.x = element_line(color = "gray80"),
+      axis.ticks.x = element_line(color = "gray80", linewidth = 0.5)
+    )
+  
+  # 4. Explicitly print the plot (required inside loops)
+  print(p)
+}
+```
+
+-   *Deportista*: El primer tipo de usuario es muy activo. Tiene el hábito de hacer ejercicio. No necesita consejos ni recordatorios para no sufrir los efectos del sedentarismo. Este perfil le puede interesar mejorar su marca personal y consejos de nutrición.
+
+-   *Ocupado*: El segundo tipo de usuario le falta consistencia. Es capaz de realizar el ejercicio semanal preescrito pero no consigue hacerlo siempre. Este perfil se puede beneficiar de un plan de acción y notificaciones periódicas.
+
+-   *Sedentario*: El tercer tipo de usuario es sedentario. A menudo no cumple con los mínimos semanales para una vida saludable. Este perfil puede tener problemas de salud preexistentes. Este perfil puede beneficiarse de consejos de profesionales médicos y un plan de acción ajustado a sus capacidades.
+
 
 ## Sueño visualisations
 
