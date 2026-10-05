@@ -92,12 +92,23 @@ Esta tabla contiene registros a nivel de minuto sobre el estado de sueño de los
 ## 3.1. Libraries
 
 ```{r libraries}
-library(tidyverse)
-library(DataExplorer) # plot_intro
-library(lubridate) # times
-library(janitor) # duplicates
+pkgs <- c(
+  "tidyverse",    # data wrangling
+  "DataExplorer", # plot_intro (checks NAs)
+  "lubridate",    # time formats and manipulation
+  "janitor"       # dedup
+  )
 
-options(scipen = 999) # to not show scientific notation
+# Install any that are missing
+missing <- pkgs[!pkgs %in% rownames(installed.packages())]
+
+if (length(missing) > 0) install.packages(missing)
+
+# Load all packages
+invisible(lapply(pkgs, library, character.only = TRUE))
+
+# to not show scientific notation
+options(scipen = 999) 
 ```
 
 ## 3.2. Data
@@ -124,9 +135,9 @@ head(minuteSleep_merged2)
 
 - Joining dataset from different dates
 - Selecting variables
+- Giving variables descriptive names
 - Converting dataset into long format (Explain more what that means later)
 - Changing variables format
-- Giving variables descriptive names
 - Giving values descriptive and easy to read names
 - Checking for NAs
 - Checking for duplicate observations and removing them
@@ -200,6 +211,17 @@ minuteSleep <-
 
 ## Análisis exploratorio
 
+### Helper functions
+
+```{r}
+out_dir <- "images"
+dir.create(out_dir, showWarnings = FALSE)
+
+save_img <- function(p, name, w = 10, h = 5.6)
+  ggsave(file.path(out_dir, paste0(name, ".png")), p, width = w, height = h, dpi = 300, bg = "white")
+```
+
+
 ### Actividad
 
 ```{r usersActivity}
@@ -207,9 +229,13 @@ dailyActivity |> distinct(Id) |> count(name="n_users")
 ```
 
 ```{r intensityOverTime}
-dailyActivity |> 
+p1 <-
+  dailyActivity |> 
   ggplot( aes(x=Date, y=Minutes, group=Activity_intensity, color=Activity_intensity)) +
     geom_line()
+
+p1
+save_img(p1, "intensityOverTime")
 ```
 
 This graph is wrong but it lead me to ask the question: Why is there such a sharp upper limit?
@@ -234,12 +260,17 @@ dailyActivity |> filter(Activity_intensity=="Sedentary", Minutes==max(Minutes)) 
 
 ¿Cómo de sedentarios son?
 
-```{r}
-dailyActivity |>
+```{r groupActivity}
+p2 <-
+  dailyActivity |>
   group_by(Activity_intensity) |> 
   summarise(Minutes=sum(Minutes)) |> 
   ggplot( aes(x=Activity_intensity, y=Minutes)) + 
   geom_bar(stat = "identity")
+
+p2
+
+save_img(p2, "groupActivity")
 ```
 
 ```{r histActivity}
@@ -348,11 +379,21 @@ weeklyActivity
 ##### visualizaciones exploratorias healthy
 
 ```{r histHealthy}
-weeklyActivity |> filter(Healthy) |> pull(MixActivity) |> hist()
+p3 <-
+  weeklyActivity |> filter(Healthy) |> pull(MixActivity) |> hist()
+
+p3
+
+save_img(p3, "histHealthy")
 ```
 
 ```{r histUnhealthy}
-weeklyActivity |> filter(!Healthy) |> pull(MixActivity) |> hist()
+p4 <-
+  weeklyActivity |> filter(!Healthy) |> pull(MixActivity) |> hist()
+
+p4
+
+save_img(p4, "histUnhealthy")
 ```
 
 ```{r}
@@ -626,10 +667,14 @@ minuteSleep |> count(Sleep_state)
 ```
 
 ```{r}
-minuteSleep |> 
+p5 <-
+  minuteSleep |> 
   count(Sleep_state) |> 
   ggplot( aes(x=Sleep_state, y=n)) + 
   geom_bar(stat = "identity")
+
+p5
+save_img(p5, "groupSleepState")
 ```
 
 
@@ -742,7 +787,8 @@ summary(sleep_schedule$duration_hours)
 ```
 
 ```{r bxpltDuration}
-ggplot(sleep_schedule, aes(x = "All Users", y = duration_hours)) +
+p6 <-
+  ggplot(sleep_schedule, aes(x = "All Users", y = duration_hours)) +
   # outlier.shape = NA evita que los outliers se dibujen por duplicado
   geom_boxplot(fill = "#3498db", alpha = 0.7, color = "black", outlier.shape = NA) +
   
@@ -762,12 +808,16 @@ ggplot(sleep_schedule, aes(x = "All Users", y = duration_hours)) +
   ) +
   theme_minimal()
 
+p6
+save_img(p6, "bxpltDuration")
+
 ```
 
 Seems low but I am adding into the boxplot the naps and those should not last 8 hours. Also, how much can I trust the values if there are people sleeping 10 hours and more.
 
 ```{r hstDuration}
-ggplot(sleep_schedule, aes(x = duration_hours)) +
+p7 <-
+  ggplot(sleep_schedule, aes(x = duration_hours)) +
 
   # binwidth = 0.5 is crucial; it sets each bar to represent a 30-minute window.
   geom_histogram(
@@ -802,6 +852,9 @@ ggplot(sleep_schedule, aes(x = duration_hours)) +
     plot.subtitle = element_text(size = 10, face = "italic"),
     axis.title = element_text(size = 11)
   )
+
+p7
+save_img(p7, "hstDuration")
 ```
 
 Most people are sleeping around 8 hours a night more or less. There is a big drop off in duration before six and a half and after 9. Perhaps if naps weren't included this histogram would look more like a normal distribution. Despite this, there still must be some error unaccounted for because I don't belive people are sleeping 16 hours straight.
@@ -813,11 +866,12 @@ sleep_schedule |>
 
 I don't see a clear pattern by having a quick look.
 
-```{r}
+```{r whenNap}
 nap<-sleep_schedule |> filter(duration_hours<= 2)
 
 # Using the sleep_schedule dataframe from the previous step
-nap |> 
+p8 <-
+  nap |> 
   ggplot(aes(x = hour(bedtime))) +
   # Set a single static color since we aren't comparing two events anymore
   geom_bar(fill = "#2c3e50", color = "black", alpha = 0.8) +
@@ -830,6 +884,9 @@ nap |>
     y = "Total Number of Sleep Sessions"
   ) +
   theme_minimal()
+
+p8
+save_img(p8, "whenNap")
 ```
 
 I was hoping to see that the low durations of sleep corresponded times of day associated with nap time. It seems unlikely then that people are taking 2 hour naps in the middle of the night. It's more likely that the LogId that should be measuring the full sleep attempt is failing and loging more than one sleep attempt per night of sleep thus artificially lowering the durations of the main sleep of the day.
@@ -869,8 +926,9 @@ not_nap <- sleep_schedule |> anti_join(nap)
   
 ```
 
-```{r}
-ggplot(not_nap, aes(x = duration_hours)) +
+```{r notNapDuration}
+p9 <-
+  ggplot(not_nap, aes(x = duration_hours)) +
 
   # binwidth = 0.5 is crucial; it sets each bar to represent a 30-minute window.
   geom_histogram(
@@ -905,12 +963,16 @@ ggplot(not_nap, aes(x = duration_hours)) +
     plot.subtitle = element_text(size = 10, face = "italic"),
     axis.title = element_text(size = 11)
   )
+
+p9
+save_img(p9, "notNapDuration")
 ```
 
 Wasted my time on the nap thing. Very little impact on the distribution. I can still sell this as signs of terrible sleeping habits that bellabeat should try and help fix.
 
 ```{r timeHitSack}
-sleep_schedule |>   
+p10 <-
+  sleep_schedule |>   
   # filter extreme cases simply using logic (NOT USING STATISTICS MAYBE CHANGE)
   filter(duration_hours<10) |> 
   
@@ -953,13 +1015,17 @@ sleep_schedule |>
   ) +
   theme_minimal() +
   theme(legend.position = "top")
+
+p10
+save_img(p10, "timeHitSack")
 ```
 
 This proves that naps are not common, yet late bedtimes are.
 
 
-```{r}
-sleep_schedule |>   
+```{r timeMainSleep}
+p11 <-
+  sleep_schedule |>   
   # filter extreme cases simply using logic (NOT USING STATISTICS MAYBE CHANGE)
   filter(between(duration_hours, 6, 9)) |> 
   
@@ -1002,11 +1068,15 @@ sleep_schedule |>
   ) +
   theme_minimal() +
   theme(legend.position = "top")
+
+p11
+save_img(p11, "timeMainSleep")
 ```
 
 ```{r bxpltDurationWkDay}
 # Build the boxplot
-ggplot(sleep_schedule, aes(x = day_of_week, y = duration_hours, fill = day_of_week)) +
+p12 <-
+  ggplot(sleep_schedule, aes(x = day_of_week, y = duration_hours, fill = day_of_week)) +
   geom_boxplot(alpha = 0.7, color = "black") +
   
   # Add a visual benchmark for the recommended 8 hours
@@ -1020,6 +1090,9 @@ ggplot(sleep_schedule, aes(x = day_of_week, y = duration_hours, fill = day_of_we
   ) +
   theme_minimal() +
   theme(legend.position = "none") # Hides the legend since the x-axis already labels days
+
+p12
+save_img(p12, "bxpltDurationWkDay")
 ```
 
 Doesn't really tell me much. Sure Sábado has a wider distribution with people willing to sleep less but not that much more than a random miércoles.
@@ -1042,11 +1115,7 @@ copio y pego muchas cosas del análisis exploratorio de manera que lo pongo más
 ### ¿Cómo de sedentarios son nuestra muestra de usuarios?
 
 ```{r groupActivity}
-dailyActivity |>
-  group_by(Activity_intensity) |> 
-  summarise(Minutes=sum(Minutes)) |> 
-  ggplot( aes(x=Activity_intensity, y=Minutes)) + 
-  geom_bar(stat = "identity")
+p2
 ```
 
 Según el [Ministerio de sanidad español](https://estilosdevidasaludable.sanidad.gob.es/actividadFisica/actividad/recomendaciones/adultos/home.htm), para evitar el sedentarismo, la población adulta debe realizar *a lo largo de la semana* un mínimo de:
@@ -1164,6 +1233,9 @@ for (i in notableProfiles) {
   
   # 4. Explicitly print the plot (required inside loops)
   print(p)
+  
+  # 5. Save the plot using your helper function
+  save_img(p = p, name = paste0("activity_user_", i))
 }
 ```
 
